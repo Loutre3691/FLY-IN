@@ -70,11 +70,13 @@ connection: tunnelB-goal
 ### 💡 <span style="color: cyan;">Explication</span>
 
 ➡️  nb_drones: permet de definir le nombre de drones :  <number>
+
 ➡️  definition de zone :
-		-  `start_hub: <name> <x> <y> [metadata]`  == zone de depart 
-		-  `end_hub: <name> <x> <y> [metadata]`  == zone de fin
-		-  `hub: <name> <x> <y> [metadata]`  == zone de regulation
-		-  Interdiction des tirets dans le nom des zones
+
+ 	- `start_hub: <name> <x> <y> [metadata]`  == zone de depart
+ 	- `end_hub: <name> <x> <y> [metadata]`  == zone de fin
+ 	`hub: <name> <x> <y> [metadata]`  == zone de regulation
+ 	Interdiction des tirets dans le nom des zones
 
 ➡️ toutes les metadatas sont optionnelles et placees entre brackets [...] avec des valeurs par defauts:
 			-  `zone=<type>`   (default: normal)
@@ -83,10 +85,11 @@ connection: tunnelB-goal
 			-  les balises entre crochets peuvent apparaitre dans n'importe quel ordre
 
 ➡️  Types de zones:
-			- <span style="color: cyan;">normal</span> (zone standard avec 1 cout de deplacemnt par tour) default
-			- <span style="color: red;">blocked</span> ( zone innaccessible, les drones ne doivent pas entrer ou passer a travers cette zone, tous cheminl l'utilisant est invalid )
-			-  <span style="color: orange;">restricted</span> (zone sensible ou dangereuse, chaque mouvement dans cette zone coute 2 tours)'
-			-  <span style="color: green;">priority</span> ( se deplacer vers cette zone  coute 1 tour mais doit etre priorise lors de la recherche de chemin)
+<span style="color: cyan;">normal</span> (zone standard avec 1 cout de deplacemnt par tour) default
+<span style="color: red;">blocked</span> ( zone innaccessible, les drones ne doivent pas entrer ou passer a travers cette zone, tous cheminl l'utilisant est invalid )
+<span style="color: orange;">restricted</span> (zone sensible ou dangereuse, chaque mouvement dans cette zone coute 2 tours)'
+<span style="color: green;">priority</span> ( se deplacer vers cette zone  coute 1 tour mais doit etre priorise lors de la recherche de chemin)
+
 
 ➡️  Les couleurs:
 			- Les couleurs sont optionnelles et peuvent etre utilise pour une representation visuelles (terminal ou affichage graphique) playgame  pour le visu 
@@ -159,10 +162,11 @@ A chaque tour chaque drone peut:
 - Pour les manœuvres à plusieurs virages (zones réglementées), le drone occupe la voie de correspondance pendant le transit et DOIT arriver à destination après le nombre de virages spécifié. Il ne peut pas attendre qu'un emplacement se libère dans la zone de destination.
 
 Chaque mouvement entre les zones a un cout en tours base sur `zone==type` de la destination:
-			- <span style="color: cyan;">normal</span> : 1 tour (par default)
-			- <span style="color: red;">blocked</span> : interdit
-			-  <span style="color: orange;">restricted</span> : 2 tours
-			-  <span style="color: green;">priority</span>: 1 tour (mais devra etre privilegie dans l algo)
+
+<span style="color: cyan;">normal</span> : 1 tour (par default)
+<span style="color: red;">blocked</span> : interdit
+<span style="color: orange;">restricted</span> : 2 tours
+<span style="color: green;">priority</span>: 1 tour (mais devra etre privilegie dans l algo)
 
 
 #### ➡️ <span style="color: purple;">PARSING - LES CONTRAINTES</span>
