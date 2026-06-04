@@ -1,18 +1,18 @@
-from parsing import parsing_map
+from parsing.parsing_map import ConfigParsing
 import maps.easy
 import sys
 
 def main():
     try:
-        file = open(sys.argv[1], "r")
-        parsing_map.Parsing(file)
+        with open(sys.argv[1], "r") as file:
+            ConfigParsing(file)
         
 
     except FileNotFoundError:
         print("\033[0;31mError: Storage vault not found\033\n[0m")
         exit()
 
-    file.close()
+    
 
 if __name__ == "__main__":
     """

@@ -1,16 +1,39 @@
 import sys
+from pydantic import Field, BaseModel
 
-class Parsing():
+
+class ConfigParsing():
     def __init__(self, map_test) -> None:
         self.map_inside = map_test.read()
 
-    def step_parsing(self) -> None:
-        Drone.number_drone_valid(self.map_inside)
+        try:
+            MapKeyParsing(self.map_inside)
+
+        except KeyError:
+            print("Key error")
 
 
-class Drone(Parsing):
-    def __init__(self, map_inside) -> None:
-        super().__init__(map_inside)
-    
-    def number_drone_valid(self) -> None:
-        print(self.map_inside)
+class MapKeyParsing():
+    def __init__(self, map) -> None:
+
+        for ligne in map:
+            ligne.strip()
+        for ligne in map:
+            if ligne is '':
+                continue
+            ligne.startswith('#')
+
+        print(map)
+
+  
+
+
+
+        required_keys = {"nb_drones", "start_hub", "hub", "connection", "end_hub"}
+       
+
+
+# class NumberDrone(BaseModel):
+#     def __init__(self, map_inside) -> None:
+#         drone_number: int = Field(ge=1, le=100)
+
