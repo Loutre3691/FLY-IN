@@ -4,7 +4,7 @@ from pydantic import Field, BaseModel
 
 class ConfigParsing():
     def __init__(self, map_test) -> None:
-        self.map_inside = map_test.read()
+        self.map_inside = map_test.readlines()
 
         try:
             MapKeyParsing(self.map_inside)
@@ -14,22 +14,24 @@ class ConfigParsing():
 
 
 class MapKeyParsing():
-    def __init__(self, map) -> None:
+    def __init__(self, maplines) -> None:
 
-        for ligne in map:
-            ligne.strip()
-        for ligne in map:
-            if ligne is '':
+        self.cleaned_line = []
+
+        for line in maplines:
+            line = line.strip()
+            if not line or  line.startswith('#'):
                 continue
-            ligne.startswith('#')
+            self.cleaned_line.append(line)
 
-        print(map)
+
+        print(self.cleaned_line)
 
   
 
 
 
-        required_keys = {"nb_drones", "start_hub", "hub", "connection", "end_hub"}
+        # required_keys = {"nb_drones", "start_hub", "hub", "connection", "end_hub"}
        
 
 
