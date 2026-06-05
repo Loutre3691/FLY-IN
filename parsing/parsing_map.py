@@ -1,5 +1,6 @@
 import sys
-from pydantic import Field, BaseModel
+from pydantic import Field, BaseModel, ValidationError
+
 
 
 class ConfigParsing():
@@ -47,10 +48,14 @@ class ConfigParsing():
                 else:
                     new_dict[key] = [value]
 
+        try:
+            value_drones = new_dict.get("nb_drones", [None])[0]
+            drone = ConfigDrone(nb_drones=value_drones)
+            drone.display()
 
-        print (new_dict)
+        except ValidationError:
+            print("error")
 
-   
 
 
 class ConfigMap():
@@ -75,10 +80,10 @@ class ConfigMap():
         return cleaned_txt
             
 
-        # required_keys = {"nb_drones", "start_hub", "hub", "connection", "end_hub"}
-       
-
 class ConfigDrone(BaseModel):
-    def __init__(self, map) -> None:
-        drone_number: int = Field(ge=1)
+    drone_number: int = Field(ge=1)
+
+    def display(self) -> None:
+        print(self.drone_number)
+
 

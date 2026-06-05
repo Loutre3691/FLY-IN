@@ -6,7 +6,8 @@
         - petit parsing argv et fichier non present  ✅
 
 ### 3. Parsing
-        - enlever espace et # dans le fichier txt de map ✅
+        - enlever espace et # dans le fichier txt de map en creant une list ✅
+        - mise en dictionnaire la list precedente en gerant les doublons de key, et en creant une liste de valeurs dans les cles doublons. ✅
         - nbr de drone, gerer chiffre, maximum, un minimum
         -  
 
