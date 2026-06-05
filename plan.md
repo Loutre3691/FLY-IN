@@ -6,6 +6,7 @@
         - petit parsing argv et fichier non present  ✅
 
 ### 3. Parsing
+        - enlever espace et # dans le fichier txt de map ✅
         - nbr de drone, gerer chiffre, maximum, un minimum
         -  
 
