@@ -2,16 +2,15 @@ import sys
 from pydantic import Field, BaseModel, ValidationError
 
 
-
 class ConfigParsing():
     """
-    Reads the drone configuration file and initializes the parsing process.
+   Lit le fichier de configuration du drone et initialise le processus d'analyse.
 
-    Args:
-        map_test (io.TextIOWrapper): The opened configuration file.
-        
-    Attributes:
-        map_inside (list[str]): All raw lines read from the file.
+Arguments:
+map_read (io.TextIOWrapper): Le fichier de configuration ouvert.
+
+Attributs:
+map_read (list[str]): Toutes les lignes brutes lues dans le fichier.
     """
     def __init__(self, map) -> None:
         self.map_read = map.readlines()
@@ -24,25 +23,38 @@ class ConfigParsing():
         
     def dispatch_parsing(self, map: list[str]):
         """
-    Parses cleaned config lines into a dictionary.
-    Splits each line on the first ':' to extract key and value.
-    Repeated keys (e.g. 'hub', 'connection') are grouped into a list.
+Analyse les lignes de configuration nettoyées et les convertit en dictionnaire.
+Sépare chaque ligne au niveau du premier «:» pour extraire la clé et la valeur.
+Les clés répétées (par exemple, «hub», «connection») sont regroupées dans une liste.
+map (liste[str]): Lignes nettoyées du fichier de configuration.
 
-    map (list[str]): Cleaned lines from the configuration file.
-
-    Result final after dispatch_parsing:
-    {
-        "nb_drones":  ["2"],
-        "hub":        ["waypoint1 1 0 [color=blue]", "waypoint2 2 0 [color=blue]"],
-        "connection": ["waypoint1-waypoint2"]
-    }
+Résultat final après dispatch_parsing:
+{
+"nb_drones": ["2"],
+"hub": ["waypoint1 1 0 [color=blue]", "waypoint2 2 0 [color=blue]"],
+"connection": ["waypoint1-waypoint2"]
+}
     """
-        new_dict = {}
+        new_dict: dict = {}
+        order_key = {
+        "nb_drones": 1, "start_hub": 2, "hub": 3, "end_hub": 4, "connection": 5
+        }
+        current_index = 0
+        last_key = "nb_drones"
+
         for line in map:
             if ':' in line:
                 slice = line.split(":", 1)
                 key = slice[0].strip()
                 value = slice[1].strip()
+
+                index = order_key.get(key)
+                if index is not None:
+                    if index < current_index:
+                        raise ValueError(f"Order ERROR : '{key}' don't must be after '{last_key}'")
+                    current_index = index
+                    last_key = key
+
                 if key in new_dict:
                     new_dict[key].append(value)
                 else:
@@ -50,23 +62,32 @@ class ConfigParsing():
 
         try:
             value_drones = new_dict.get("nb_drones", [None])[0]
-            drone = ConfigDrone(nb_drones=value_drones)
-            drone.display()
+            ConfigKeyGlobal(nb_drones=value_drones)
+            if not "start_hub" in new_dict:
+                print("error")
+     
+
+            
+
+           
+           
+            
+
 
         except ValidationError:
-            print("error")
-
+            print("Error, first line muste be 'nb_drones' end min 1 drone in value and max 999 999")
+        
 
 
 class ConfigMap():
     """
-    Cleans raw text lines by removing spaces, empty lines, and comments.
+Nettoie les lignes de texte brut en supprimant les espaces, les lignes vides et les commentaires.
 
-    Args:
-        maplines (list[str]): Raw lines from the config file.   
+Arguments:
+maplines (liste [str]): Lignes brutes du fichier de configuration.
 
-    Attributes:
-        cleaned_line (list[str]): The filtered, data-only lines.
+Attributs:
+cleaned_line (liste [str]): Lignes filtrées ne contenant que les données.
     """
     @staticmethod
     def clean_file_txt(maplines) -> list:
@@ -79,11 +100,17 @@ class ConfigMap():
             cleaned_txt.append(line)
         return cleaned_txt
             
+class ConfigKeyGlobal(BaseModel):
+    nb_drones: int = Field(ge=1, le=999999)
 
-class ConfigDrone(BaseModel):
-    drone_number: int = Field(ge=1)
+    # class ConfigStart():
+        
 
-    def display(self) -> None:
-        print(self.drone_number)
+        
+        
+        
+    # class ConfigHub():
+        
+    # class ConfigEnd():
 
-
+    # class ConfigConnection():

@@ -10,9 +10,14 @@ def main():
 
     except FileNotFoundError:
         print("\033[0;31mError: Storage vault not found\033\n[0m")
-        exit()
+        exit(1)
 
-    
+    except ValueError as e:
+        # Erreur si le parsing plante 
+        print(f"\033[0;31mError: {e}\033[0m\n")
+        exit(1)
+
+  
 
 if __name__ == "__main__":
     """
