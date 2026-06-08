@@ -1,5 +1,6 @@
 import sys
 from pydantic import Field, BaseModel, ValidationError
+from abc import ABC
 
 
 class ConfigParsing():
@@ -62,20 +63,18 @@ Résultat final après dispatch_parsing:
 
         try:
             value_drones = new_dict.get("nb_drones", [None])[0]
-            ConfigKeyGlobal(nb_drones=value_drones)
-            if not "start_hub" in new_dict:
-                print("error")
-     
-
-            
-
-           
-           
-            
-
+            ConfigDrone(nb_drones=value_drones)
 
         except ValidationError:
             print("Error, first line muste be 'nb_drones' end min 1 drone in value and max 999 999")
+        
+        try:
+            value_start_hub = new_dict.get("start_hub", [None])[0]
+            
+            ConfigStart.name_start(value_start_hub)
+
+        except ValidationError:
+            print("Error start")
         
 
 
@@ -100,17 +99,31 @@ cleaned_line (liste [str]): Lignes filtrées ne contenant que les données.
             cleaned_txt.append(line)
         return cleaned_txt
             
-class ConfigKeyGlobal(BaseModel):
+
+class ConfigDrone(BaseModel):
     nb_drones: int = Field(ge=1, le=999999)
 
-    # class ConfigStart():
-        
+# class ConfigGlobal(ABC):
+#     def __init__(self, zone_1, zone_2) -> None:
+#         pass
 
-        
-        
-        
-    # class ConfigHub():
-        
-    # class ConfigEnd():
+# class Waypoint(ABC):
+#     def __init__(self, name, x, y, zone, color, max):
+#         pass
 
-    # class ConfigConnection():
+class ConfigStart():
+    def __init__(self) -> None:
+        pass
+        # super().__init__(name, x, y, zone, color, max)
+
+    def name_start(party) -> None:
+        part = party.split("[", 1)
+        part_principal = part[0].split(" ", 2)
+        part_option = part[1].split(" ")
+        print(part_principal)
+        print (part_option)
+        
+        
+        
+            
+       

@@ -10,7 +10,10 @@
         - mise en dictionnaire la list precedente en gerant les doublons de key, et en creant une liste de valeurs dans les cles doublons. ✅
         - plan des cles nb_drones, start_hub, hub, end_hub, conenction respectde l'ordre ✅
         - nbr de drone, gerer chiffre, un minimum ✅
-        -  
+        - parsing sur start_hub (class Configstart)
+        - parsing sur hub (class ConfigHub)
+        - parsing sur end_hub (class ConfigEnd)
+        - parsing sur connection (class ConfigConnection)
 
 ### 4. Requierement
 
