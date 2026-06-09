@@ -2,9 +2,6 @@ import sys
 from pydantic import Field, BaseModel, ValidationError
 from abc import ABC
 
-
-name_and_coordinate = {}
-
 class ConfigParsing():
     """
    Lit le fichier de configuration du drone et initialise le processus d'analyse.
@@ -16,6 +13,9 @@ class ConfigParsing():
     map_read (list[str]): Toutes les lignes brutes lues dans le fichier.
     """
     def __init__(self, map) -> None:
+        self.dict_station = {}      
+        self.list_station = []     
+        self.set_coords = set()
         self.map_read = map.readlines()
         self.cleaned_map = ConfigMap.clean_file_txt(self.map_read)
 
@@ -127,7 +127,7 @@ class Waypoint(ABC):
         self.color = color
         self.max = max_drones
     
-
+    @staticmethod 
     def parse_line(value) -> None:
         '''
         parse_line permet de split chaque ligne, on separe en premier lieu le nom et x, y des option entre crochet,
@@ -135,30 +135,40 @@ class Waypoint(ABC):
         grace au doublon des cles du dictionnaire (nom station) et ensuite avec un set pour gerer les erreurs
         des doublons de coordonnees
         '''
+        # dict_option = {}
         for first_split in value:
             part = first_split.split("[")
             main_part = part[0].split(" ")
+            
             name_station, x, y = main_part[0], main_part[1], main_part[2]
-            option_part = part[1].split("[")
-
-            if name_station in name_and_coordinate:
-                raise ValueError(f"Duplicate not allowed: The station '{name_station}' already exists in the dictionary.")
+        
+            if name_station in self.list_station:
+                raise ValueError(f"Duplicate not allowed: The station '{name_station}' already exists in list.")
             else:
-                name_and_coordinate[name_station]= x, y
-        
-        single_coordinate = list(name_and_coordinate.values())
-        set_coordinate = set(single_coordinate)
+                self.list_station.append(name_station)
 
-        if len(single_coordinate) != len(set_coordinate):
-            raise ValueError((f"Duplicate not allowed: coordinate exists in duplicate"))
+            # option_part = part[1].split(" ")
+            # print(option_part)
+            # dict_option[]
 
+            coord = (x, y)
+            if coord in self.set_coords :
+                raise ValueError(f"Duplicate not allowed: The coordinate is duplicate")
+            else:
+                self.set_coords.add(coord)
+            print (self.set_coords)
         
+        # single_coordinate = list(dict_station_x_y.values())
+        # set_coordinate = set(single_coordinate)
+
+        # if len(single_coordinate) != len(set_coordinate):
+        #     raise ValueError((f"Duplicate not allowed: coordinate exists in duplicate"))
+
 
 
 
 class ConfigStartHub(Waypoint):
     pass
-
 
 class ConfigHub(Waypoint):
     pass
