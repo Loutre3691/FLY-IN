@@ -138,7 +138,7 @@ class Station(ABC):
         grace au doublon des cles du dictionnaire (nom station) et ensuite avec un set pour gerer les erreurs
         des doublons de coordonnees
         '''
-        color_list = ['green', 'blue', 'red', 'orange', 'purple', 'cyan', 'gray' 'yellow', 'magenta', 'gold', 'lime', 'brown']
+        color_list = ['green', 'blue', 'red', 'orange', 'purple', 'cyan', 'gray', 'yellow', 'magenta', 'gold', 'lime', 'brown']
         zone_list = ['restricted', 'priority', 'blocked', 'normal']
 
         # split pour separer nom + coordonnees des metadata entre [] -> creation de 2 listes separees
