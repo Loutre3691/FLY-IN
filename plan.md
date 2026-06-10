@@ -10,7 +10,7 @@
         - mise en dictionnaire la list precedente en gerant les doublons de key, et en creant une liste de valeurs dans les cles doublons. ✅
         - plan des cles nb_drones, start_hub, hub, end_hub, conenction respectde l'ordre ✅
         - nbr de drone, gerer chiffre, un minimum ✅
-        - parse_line methode qui gere les doublons des noms de stations et les doublons de coordonnees ✅
+        - parse_line methode qui gere les doublons des noms de stations et les doublons de coordonnees 
         - deuxieme partie de parse_line qui gere les options
         - parsing sur start_hub (class Configstart)
         - parsing sur hub (class ConfigHub)
