@@ -20,6 +20,7 @@ class ConfigParsing():
         self.map_read = map.readlines()
         self.cleaned_map = ConfigMap.clean_file_txt(self.map_read)
 
+
         if not self.cleaned_map:
             print("Error: Not found file")
         
@@ -43,27 +44,44 @@ class ConfigParsing():
         order_key = {
         "nb_drones": 1, "start_hub": 2, "hub": 3, "end_hub": 4, "connection": 5
         }
+
+        count_start = 0
+        count_end = 0
         current_index = 0
         last_key = "nb_drones"
+
 
         # map est la liste de toutes les lignes du fichier.txt
         for line in map:
             if ':' in line:
                 slice = line.split(":", 1)
                 key = slice[0].strip()
-                value = slice[1].strip()
+                value = slice[1].strip() 
 
                 index = order_key.get(key)
-                if index is not None:
+                print(key)
+                print(index)
+                
+                # gere l'ordre de start_hub, hub, end_hub et connection. gestion d'un mauvais nom
+                if index and count_end == 0 and count_start == 0:
                     if index < current_index:
                         raise ValueError(f"Order ERROR : '{key}' don't must be after '{last_key}'")
+                    if index is 2:
+                        count_start += 1
+                    elif index is 4:
+                        count_end += 1
                     current_index = index
                     last_key = key
+
+                else:
+                    raise ValueError("The key start")
 
                 if key in new_dict:
                     new_dict[key].append(value)
                 else:
                     new_dict[key] = [value]
+
+                
         
         # configuration de la partie drones dans le fichier.txt
         try: 
@@ -150,6 +168,7 @@ class Station(ABC):
             # separation de la nom de station des coordonnees
             name_station = main_part[0] # start, waypoint, goal ..
             x, y = main_part[1], main_part[2]
+        
             coord = (x, y)
         
 
@@ -207,7 +226,7 @@ class Station(ABC):
                 'coord': coord,
                 **metadata_in_dict
             }
-            
+
 
 class ConfigStartHub(Station):
     pass
