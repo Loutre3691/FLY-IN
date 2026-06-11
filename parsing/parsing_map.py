@@ -13,13 +13,12 @@ class ConfigParsing():
     map_read (list[str]): Toutes les lignes brutes lues dans le fichier.
     """
     def __init__(self, map) -> None:
-        self.list_station = []     
-        self.set_coords = set()
-        self.dict_metadata = {}
-        self.dict_for_algo = {}
+        self.list_station: list = []     
+        self.set_coords: set = set()
+        self.dict_metadata: dict = {}
+        self.dict_for_algo: dict = {}
         self.map_read = map.readlines()
         self.cleaned_map = ConfigMap.clean_file_txt(self.map_read)
-
 
         if not self.cleaned_map:
             print("Error: Not found file")
@@ -41,9 +40,7 @@ class ConfigParsing():
         }
     """
         new_dict: dict = {}
-        order_key = {
-        "nb_drones": 1, "start_hub": 2, "hub": 3, "end_hub": 4, "connection": 5
-        }
+        order_key: dict = {"nb_drones": 1, "start_hub": 2, "hub": 3, "end_hub": 4, "connection": 5}
 
         count_start = 0
         count_end = 0
@@ -156,19 +153,22 @@ class Station(ABC):
         '''
         color_list = ['green', 'blue', 'red', 'orange', 'purple', 'cyan', 'gray', 'yellow', 'magenta', 'gold', 'lime', 'brown']
         zone_list = ['restricted', 'priority', 'blocked', 'normal']
-
+        
         # split pour separer nom + coordonnees des metadata entre [] -> creation de 2 listes separees
         for first_split in value:
             part = first_split.split("[")
-            main_part, metadata_part = part[0].split(" "), part[1].strip("]").split(" ")
+            main_part, metadata_part = part[0].split(), part[1].strip("]").split()
     
     
-            # separation de la nom de station des coordonnees
+            # separation du nom de la station, des coordonnees
             name_station = main_part[0] # start, waypoint, goal ..
+            if len(main_part) < 3 or not main_part[1] or not main_part[2]: # pour avoir min 2 coord
+                raise ValueError("The coordinates must include 2 coordinates")
+            if len(main_part) > 3 and main_part[3]: # pour eviter une 3 eme coord par erreur
+                raise ValueError("The coordinates must not contain more than 2 coordinates")
+           
             x, y = main_part[1], main_part[2]
-        
             coord = (x, y)
-        
 
             # gestion de la liste des noms de stations, si doublon, puis append dans 
             # la liste 'list_station' pour eutilisation  pour les connections
@@ -194,6 +194,9 @@ class Station(ABC):
     # GESTION ERREURS METADATAS:
 
             # gestion erreur pour les valeurs de 'color=....'
+            if " " in metadata_in_dict:
+                pass
+
             if 'color' in metadata_in_dict:
                 if metadata_in_dict['color'] in color_list:
                     print(f"color : {metadata_in_dict['color']}")
