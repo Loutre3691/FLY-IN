@@ -17,6 +17,7 @@ class ConfigParsing():
         self.set_coords: set = set()
         self.dict_metadata: dict = {}
         self.dict_for_algo: dict = {}
+        self.dict_connection: dict = {}
         self.map_read = map.readlines()
         self.cleaned_map = ConfigMap.clean_file_txt(self.map_read)
 
@@ -76,7 +77,7 @@ class ConfigParsing():
                 new_dict[key].append(value)
             else:
                 new_dict[key] = [value]
-
+            
                 
         # configuration de la partie drones dans le fichier.txt
         try: 
@@ -87,19 +88,17 @@ class ConfigParsing():
             print("Error, first line muste be 'nb_drones' end min 1 drone in value and max 999 999")
         
         # configuration de start, hub, end en envoyant dans parse_line pour gerer chaque ligne une a une
-        try:
-            value_start_hub = new_dict.get("start_hub", [None])
-            ConfigStartHub.parse_line(value_start_hub, self.list_station, self.set_coords, self.dict_for_algo)
-            value_hub = new_dict.get("hub", [None])
-            ConfigHub.parse_line(value_hub, self.list_station, self.set_coords, self.dict_for_algo)
-            value_end_hub = new_dict.get("end_hub", [None])
-            ConfigEndHub.parse_line(value_end_hub, self.list_station, self.set_coords, self.dict_for_algo)
+        value_start_hub = new_dict.get("start_hub", [None])
+        ConfigStartHub.parse_line_station(value_start_hub, self.list_station, self.set_coords, self.dict_for_algo)
+        value_hub = new_dict.get("hub", [None])
+        ConfigHub.parse_line_station(value_hub, self.list_station, self.set_coords, self.dict_for_algo)
+        value_end_hub = new_dict.get("end_hub", [None])
+        ConfigEndHub.parse_line_station(value_end_hub, self.list_station, self.set_coords, self.dict_for_algo)
 
-        except ValidationError:
-            print("Error,  start_hub")
-
-
-
+        # parsing de la partie connection
+        value_connection = new_dict.get("connection", [None])
+        Connection(value_connection, self.list_station)
+        
 class ConfigMap():
     """
     Nettoie les lignes de texte brut en supprimant les espaces, les lignes vides et les commentaires.
@@ -135,16 +134,9 @@ class Station(ABC):
     Waypoint qui est une classe abstraite permet  de parser chaque ligne selon sa cle (start_hub,
     hub, end_hub) ps: connection est gerer dans une autre classe car n'a pas les memes arguments
     '''
-    def __init__(self, name, x, y, zone, color, max_drones):
-        self.name = name
-        self.x = x
-        self.y = y
-        self. zone = zone
-        self.color = color
-        self.max = max_drones
     
     @staticmethod 
-    def parse_line(value, list_station, set_coords, dict_for_algo) -> None:
+    def parse_line_station(value, list_station, set_coords, dict_for_algo) -> None:
         '''
         parse_line permet de split chaque ligne, on separe en premier lieu le nom et x, y des option entre crochet,
         creation d'un dictionnaire avec name de la station et un tupple de coordonne x, y puis gestion des erreurs
@@ -199,7 +191,7 @@ class Station(ABC):
 
             if 'color' in metadata_in_dict:
                 if metadata_in_dict['color'] in color_list:
-                    print(f"color : {metadata_in_dict['color']}")
+                    pass
                 elif not metadata_in_dict['color']:
                     raise ValueError(f"You must write a color after key 'color=...' in file.txt" )
                 else:
@@ -237,3 +229,32 @@ class ConfigHub(Station):
     
 class ConfigEndHub(Station):
     pass
+
+class Connection():
+    def __init__(self, value_connection, list_station) -> None:
+        self.list_station = list_station
+        self.value_connection = value_connection
+        new_list_check: list = []
+
+
+        for item in self.value_connection:
+            separate_connection = sorted(set(item.split("-")))
+            
+            if len(separate_connection) != 2:
+                raise ValueError("You must give 2 station")
+            
+            if separate_connection in new_list_check:
+                raise ValueError(f"{separate_connection} is already exists, you can't have duplicate connections")
+            else:
+                new_list_check.append(separate_connection)
+        
+            print(new_list_check)
+
+            
+            
+
+
+
+            
+            
+        
