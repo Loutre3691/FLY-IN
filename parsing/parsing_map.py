@@ -50,7 +50,6 @@ class ConfigParsing():
         current_index = 0
         last_key = "nb_drones"
 
-
         # map est la liste de toutes les lignes du fichier.txt
         for line in map:
             if ':' in line:
@@ -58,31 +57,30 @@ class ConfigParsing():
                 key = slice[0].strip()
                 value = slice[1].strip() 
 
-                index = order_key.get(key)
-                print(key)
-                print(index)
+            # compteur pour eviter les doublons de start_hub et end_hub
+            if key == "start_hub" and count_start <= 1 :
+                count_start += 1
+            if key == "end_hub" and count_end <= 1 :
+                count_end += 1
+
+            if count_end > 1 or count_start > 1:
+                raise ValueError("❗ You can't give the keys twice 'start_hub' or 'end_hub.")
+
+            index = order_key.get(key)
+ 
+            # gere l'ordre de start_hub, hub, end_hub et connection. gestion d'un mauvais nom
+            if index:
+                if index < current_index:
+                    raise ValueError(f"Order ERROR : '{key}' don't must be after '{last_key}'")
+                current_index = index
+                last_key = key
+
+            if key in new_dict:
+                new_dict[key].append(value)
+            else:
+                new_dict[key] = [value]
+
                 
-                # gere l'ordre de start_hub, hub, end_hub et connection. gestion d'un mauvais nom
-                if index and count_end == 0 and count_start == 0:
-                    if index < current_index:
-                        raise ValueError(f"Order ERROR : '{key}' don't must be after '{last_key}'")
-                    if index is 2:
-                        count_start += 1
-                    elif index is 4:
-                        count_end += 1
-                    current_index = index
-                    last_key = key
-
-                else:
-                    raise ValueError("The key start")
-
-                if key in new_dict:
-                    new_dict[key].append(value)
-                else:
-                    new_dict[key] = [value]
-
-                
-        
         # configuration de la partie drones dans le fichier.txt
         try: 
             value_drones = new_dict.get("nb_drones", [None])[0]
