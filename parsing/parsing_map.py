@@ -257,18 +257,29 @@ class Connection():
     @staticmethod
     def parse_connection(value_connection, station_names, connections_data, stations_data) -> None:
         connected_stations = []  # Stations trouvées dans les connections
+        dict_max_link = {}
 
         for item in value_connection:
+            max_link = None
             if "[" in item:
                 part = item.split("[")
-            if part[1]:
-                max_link = part[1]
-            connection_pair = sorted(set(part[0].split("-")))  # Paire de stations d'une connection
+                connection_pair = sorted(set(part[0].split("-")))
+                if part[1]:
+                    max_link = part[1]
+                    max_link = max_link.split("]")
+                    max_link = max_link[0]
+                    key, value = max_link.split("=")
+                    dict_max_link[key] = value
+    
+            # Paire de stations d'une connection
+            else:
+                connection_pair = sorted(set(item.split("-")))
 
+                     
             # gestion nbre de station min 2 
             if len(connection_pair) != 2:
                 raise ValueError("You must give 2 station")
-            
+
             # gestion des doublons de chaque connection + ajout a la liste
             if connection_pair in connections_data:
                 raise ValueError(f"{connection_pair} is already exists, you can't have duplicate connections")
@@ -280,15 +291,11 @@ class Connection():
                 for station in connection:
                     if not station in connected_stations:
                         connected_stations.append(station)
-                
-        if connected_stations != station_names:
+     
+        if set(connected_stations) != set(station_names):
             raise ValueError("the stations in 'connection' doesn't same order in list stations in first part")     
 
-        # comparaison avec max_link dans connection et max_drone dans la premiere partie
-        if max_link:
-            if int(max_link.value()) != stations_data['max_drones'].value():
-                raise ValueError("test")
-
+        
             
 
             
