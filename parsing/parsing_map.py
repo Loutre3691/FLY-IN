@@ -26,11 +26,6 @@ class ConfigParsing():
         
         self.parsed_config = self.parse_config_file(self.cleaned_lines)      # Configuration finale
 
-        # print(f"nom des station: {self.station_names}")
-        # print(f"dict des stations: {self.stations_data}")
-        print(f"connection: {self.connections_data}")
-        # print(f"station voisine: {self.neighbor_station}")
-
 
     def parse_config_file(self, map: list[str]):
         """
@@ -50,12 +45,13 @@ class ConfigParsing():
         order_key: dict = {"nb_drones": 1, "start_hub": 2, "hub": 3, "end_hub": 4, "connection": 5}
 
         count_start = 0
+        count_drone = 0
         count_end = 0
         current_index = 0
         last_key = "nb_drones"
 
         # map est la liste de toutes les lignes du fichier.txt
-        for line in map:
+        for i, line in self.cleaned_lines:
             if ':' in line:
                 slice = line.split(":", 1)
                 key = slice[0].strip()
@@ -63,50 +59,63 @@ class ConfigParsing():
             
             # gestion d'erreur si mauvaise cle inscrite dans le file.txt
             if not key in order_key:
-                raise ValueError(f"{key} is not a valid key, you must write 'nb_drones / start_hub / hub / end_ub /connection'")
+                raise ValueError(f"Line {i}: {key} is not a valid key, you must write 'nb_drones / start_hub / hub / end_ub /connection'")
 
             # compteur pour eviter les doublons de start_hub et end_hub
+            if key == "nb_drones" and count_drone <= 1 :
+                count_drone += 1
+                if count_drone > 1:
+                    raise ValueError(f"Line {i}: 'nb_drones' is defined twice")
+
             if key == "start_hub" and count_start <= 1 :
                 count_start += 1
+                if count_start > 1:
+                    raise ValueError(f"Line {i}: 'start_hub' is defined twice")
+
             if key == "end_hub" and count_end <= 1 :
                 count_end += 1
-
-            if count_end > 1 or count_start > 1:
-                raise ValueError("❗ You can't give the keys twice 'start_hub' or 'end_hub.")
+                if count_end > 1:
+                    raise ValueError(f"Line {i}: 'end_hub' is defined twice")
 
             index = order_key.get(key)
  
             # gere l'ordre de start_hub, hub, end_hub et connection. gestion d'un mauvais nom
             if index:
                 if index < current_index:
-                    raise ValueError(f"Order ERROR : '{key}' don't must be after '{last_key}'")
+                    raise ValueError(f"Line: {i}:Order ERROR : '{key}' don't must be after '{last_key}'")
                 current_index = index
                 last_key = key
 
             if key in config_dict:
-                config_dict[key].append(value)
+                config_dict[key].append((i, value))
             else:
-                config_dict[key] = [value]
-            
-                
-        # configuration de la partie drones dans le fichier.txt
-        try: 
-            drone_count = config_dict.get("nb_drones", [None])[0]
-            ConfigDrone(nb_drones=drone_count)
+                config_dict[key] = [(i, value)]
 
+        if count_drone != 1:
+            raise ValueError(f"Line {i} (end of file): 'nb_drones' is missing")
+        if count_start != 1:
+            raise ValueError(f"Line {i} (end of file): 'start_hub' is missing")
+        if count_end != 1:
+            raise ValueError(f"Line {i} (end of file): 'end_hub' is missing")
+
+        # configuration de la partie drones dans le fichier.txt
+        try:
+            line_num, drone_count = config_dict.get("nb_drones", [(None, None)])[0]
+            ConfigDrone(nb_drones=drone_count)
         except ValidationError:
-            print("Error, first line muste be 'nb_drones' end min 1 drone in value and max 999 999")
-        
+            line_num, _ = config_dict.get("nb_drones", [(None, None)])[0]
+            raise ValueError(f"Line {line_num}: 'nb_drones' must be a number between 1 and 200")
+
         # configuration de start, hub, end en envoyant dans parse_line pour gerer chaque ligne une a une
-        value_start_hub = config_dict.get("start_hub", [None])
+        value_start_hub = config_dict.get("start_hub", [(None, None)])
         ConfigStartHub.parse_stations(value_start_hub, self.station_names, self.used_coordinates, self.stations_data)
-        value_hub = config_dict.get("hub", [None])
+        value_hub = config_dict.get("hub", [(None, None)])
         ConfigHub.parse_stations(value_hub, self.station_names, self.used_coordinates, self.stations_data)
-        value_end_hub = config_dict.get("end_hub", [None])
+        value_end_hub = config_dict.get("end_hub", [(None, None)])
         ConfigEndHub.parse_stations(value_end_hub, self.station_names, self.used_coordinates, self.stations_data)
 
         # parsing de la partie connection
-        value_connection = config_dict.get("connection", [None])
+        value_connection = config_dict.get("connection", [(None, None)])
         Connection.parse_connection(value_connection, self.station_names, self.connections_data, self.neighbor_station)
 
         
@@ -125,11 +134,11 @@ class ConfigMap():
     def clean_raw_lines(maplines) -> list:
         cleaned_txt = []
 
-        for line in maplines:
+        for i, line in enumerate(maplines, 1):
             line = line.strip()
             if not line or line.startswith('#'):
                 continue
-            cleaned_txt.append(line)
+            cleaned_txt.append((i, line))
         return cleaned_txt
             
 
@@ -157,38 +166,37 @@ class Station(ABC):
         '''
         color_list = ['green', 'blue', 'red', 'orange', 'purple', 'cyan', 'gray', 'yellow', 'magenta', 'gold', 'lime', 'brown']
         zone_list = ['restricted', 'priority', 'blocked', 'normal']
-        
+
         # split pour separer nom + coordonnees des metadata entre [] -> creation de 2 listes separees
-        for first_split in value:
+        for i, first_split in value:
             if first_split is None:
                 continue
             part = first_split.split("[")
             station_data, metadata_items = part[0].split(), part[1].strip("]").split()
             # station_data -> Données principales (nom + coords)
             # metadata_items ->  Éléments de métadonnées
-    
-    
+
+
             # separation du nom de la station, des coordonnees
             station_name = station_data[0] # start, waypoint, goal ..
             if len(station_data) < 3 or not station_data[1] or not station_data[2]: # pour avoir min 2 coord
-                raise ValueError("The coordinates must include 2 coordinates")
+                raise ValueError(f"Line {i}: the coordinates must include 2 coordinates")
             if len(station_data) > 3 and station_data[3]: # pour eviter une 3 eme coord par erreur
-                raise ValueError("The coordinates must not contain more than 2 coordinates")
-           
-            x, y = station_data[1], station_data[2]
+                raise ValueError(f"Line {i}: the coordinates must not contain more than 2 coordinates")
+
+            x, y = int(station_data[1]), int(station_data[2])
             coord = (x, y)
 
-            # gestion de la liste des noms de stations, si doublon, puis append dans 
+            # gestion de la liste des noms de stations, si doublon, puis append dans
             # la liste 'station_names' pour eutilisation  pour les connections
             if station_name in station_names:
-                raise ValueError(f"Duplicate not allowed: The station '{station_name}' already exists in list.")
+                raise ValueError(f"Line {i}: duplicate station '{station_name}' already exists")
             else:
                 station_names.append(station_name)
 
-
             # gestion du set de coordonnes avec x y, si doublon -> erreur sinon add a 'used_coordinates
-            if coord in used_coordinates :
-                raise ValueError(f"Duplicate not allowed: The coordinate {coord} already exists")
+            if coord in used_coordinates:
+                raise ValueError(f"Line {i}: duplicate coordinate {coord} already exists")
             else:
                 used_coordinates.add(coord)
 
@@ -196,36 +204,30 @@ class Station(ABC):
             station_metadata = {}  # Dictionnaire des métadonnées
             for item in metadata_items:
                 key, val = item.split("=")
+                if key in station_metadata:
+                    raise ValueError(f"Line {i}: duplicate metadata key '{key}' in station '{station_name}'")
                 station_metadata[key] = val
 
-
     # GESTION ERREURS METADATAS:
-
             # gestion erreur pour les valeurs de 'color=....'
-            if " " in station_metadata:
-                pass
-
             if 'color' in station_metadata:
-                if station_metadata['color'] in color_list:
-                    pass
-                elif not station_metadata['color']:
-                    raise ValueError(f"You must write a color after key 'color=...' in file.txt" )
-                else:
-                    raise ValueError(f"The color '{station_metadata['color']}' don't exist in the ref colors")
+                if not station_metadata['color']:
+                    raise ValueError(f"Line {i}: you must write a color after 'color='")
+                elif station_metadata['color'] not in color_list:
+                    raise ValueError(f"Line {i}: color '{station_metadata['color']}' does not exist")
 
             # gestion erreur pour les valeurs de 'zone=....'
             if 'zone' in station_metadata:
-                if station_metadata['zone'] in zone_list:
-                    pass
-                elif not station_metadata['zone']:
-                    raise ValueError(f"You must write a zone after key 'zone=...' in file.txt" )
-                else:
-                    raise ValueError(f"The zone '{station_metadata['zone']}' don't exist in the ref zone_list")
+                if not station_metadata['zone']:
+                    raise ValueError(f"Line {i}: you must write a zone after 'zone='")
+                elif station_metadata['zone'] not in zone_list:
+                    raise ValueError(f"Line {i}: zone '{station_metadata['zone']}' does not exist")
 
             # gestion erreur pour les valeurs de 'max_drones=....'
             if 'max_drones' in station_metadata:
-                if not int(station_metadata['max_drones']):
-                    raise ValueError("You must write min '1 drone' in 'max_drone=...' in file.txt" )
+                if int(station_metadata['max_drones']) < 1:
+                    raise ValueError(f"Line {i}: 'max_drones' must be at least 1")
+
 
             # creation du dictionnaire final qui pourra etre reutilise pour l'algo avec comme cle le nom  de la station
             # et ensuite un dictionnaire des clees : coord, zone, color, max_drone)
@@ -233,6 +235,7 @@ class Station(ABC):
                 'coord': coord,
                 **station_metadata
             }
+
 
 
 class ConfigStartHub(Station):
@@ -269,7 +272,9 @@ class Connection():
         check_list_dubble = []
         connected_stations = set()
 
-        for item in value_connection:
+        for i, item in value_connection:
+            if item is None:
+                continue
             link_connection = {}
 
             if "[" in item:
@@ -277,33 +282,34 @@ class Connection():
                 connection_pair = [s.strip() for s in part[0].split("-")]
 
                 key, value = part[1].strip("]").split("=")
-                link_connection[key] = value
-
+                if key == "max_link_capacity" and int(value) < 1:
+                    raise ValueError(f"Line {i}: 'max_link_capacity' must be at least 1")
+                link_connection[key] = int(value)
             # Paire de stations d'une connection
             else:
                 connection_pair = [s.strip() for s in item.split("-")]
-        
-            # gestion nbre de station min 2 
+
+            # gestion nbre de station min 2
             if len(connection_pair) != 2:
-                raise ValueError("You must give 2 station")
-            
+                raise ValueError(f"Line {i}: a connection must have exactly 2 stations")
+
             connected_stations.add(connection_pair[0])
             connected_stations.add(connection_pair[1])
 
             # gestion des doublons de pair de station
             if connection_pair in check_list_dubble:
-                raise ValueError("attention doublon")
+                raise ValueError(f"Line {i}: duplicate connection {connection_pair}")
             else:
                 check_list_dubble.append(connection_pair)
-            
-             # stockage de la connexion avec ses metadata (vide si aucune)
+
+            # stockage de la connexion avec ses metadata (vide si aucune)
             connections_data[tuple(connection_pair)] = link_connection
 
             # ajout du voisin directionnel pour le graphe
             neigbhor_station.setdefault(connection_pair[0], []).append(connection_pair[1])
 
         if connected_stations != set(station_names):
-            raise ValueError("stations in 'connection' not similar at 'stations names'")
+            raise ValueError(f"Line {i} (end of file): stations in 'connection' don't match declared stations")
             
 
             

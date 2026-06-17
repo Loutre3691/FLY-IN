@@ -7,6 +7,9 @@ def main():
         with open(sys.argv[1], "r") as file:
             ConfigParsing(file)
         
+    except PermissionError:
+        print("\033[0;31mError: permission not valid\033\n[0m")
+        exit(1)
 
     except FileNotFoundError:
         print("\033[0;31mError: Storage vault not found\033\n[0m")
