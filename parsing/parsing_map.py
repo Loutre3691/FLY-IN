@@ -1,6 +1,6 @@
 from pydantic import Field, BaseModel, ValidationError
 from abc import ABC
-from typing import IO
+from typing import IO, Any
 
 
 class ConfigParsing():
@@ -15,11 +15,15 @@ class ConfigParsing():
     map_read (list[str]): Toutes les lignes brutes lues dans le fichier.
     """
     def __init__(self, map: IO[str]) -> None:
-        self.station_names: list = []  # Liste des noms de stations
-        self.used_coordinates: set = set()  # Set des coordonnées utilisées
-        self.stations_data: dict = {}  # Dictionnaire complet des stations
-        self.connections_data: dict = {}  # {(stationA, stationB): {metadata}}
-        self.neighbor_station: dict = {}  # dict des stations voisines
+        self.station_names: list[str] = []  # Liste des noms de stations
+        self.used_coordinates: set[tuple[int, int]] = set()
+        # Set des coordonnées utilisées
+        self.stations_data: dict[str, Any] = {}
+        # Dictionnaire complet des stations
+        self.connections_data: dict[tuple[str, str], Any] = {}
+        # {(stationA, stationB): {metadata}}
+        self.neighbor_station: dict[str, Any] = {}
+        # dict des stations voisines
         self.raw_lines = map.readlines()  # Lignes brutes du fichier
         self.cleaned_lines = ConfigMap.clean_raw_lines(self.raw_lines)
 
@@ -45,8 +49,8 @@ class ConfigParsing():
         "connection": ["waypoint1-waypoint2"]
         }
         """
-        config_dict: dict = {}  # Dictionnaire temporaire de parsing
-        order_key: dict = {
+        config_dict: dict[str, Any] = {}  # Dictionnaire temporaire de parsing
+        order_key: dict[str, int] = {
             "nb_drones": 1,
             "start_hub": 2,
             "hub": 3,
@@ -208,8 +212,8 @@ class Station(ABC):
 
     @staticmethod
     def parse_stations(
-        value: list, station_names: list,
-        used_coordinates: set, stations_data: dict
+        value: list[Any], station_names: list[str],
+        used_coordinates: set[tuple[int, int]], stations_data: dict[str, Any]
     ) -> None:
         '''
         parse_line permet de split chaque ligne, on separe en
@@ -353,8 +357,9 @@ class Connection():
 
     @staticmethod
     def parse_connection(
-        value_connection: list, station_names: list,
-        connections_data: dict, neigbhor_station: dict
+        value_connection: list[Any], station_names: list[str],
+        connections_data: dict[tuple[str, str], Any],
+        neigbhor_station: dict[str, Any]
     ) -> None:
         """
         Analyse les lignes de connexion du fichier de configuration et
