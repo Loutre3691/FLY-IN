@@ -19,9 +19,9 @@
         - parsing sur end_hub (class ConfigEnd) ✅
         - realisation d un un dictionnaire avec station: nom: ... coord:... metadata:.... ✅
 
-        - parsing sur connection (class ConfigConnection)
+        - parsing sur connection (class ConfigConnection) ✅
         - gestion validation des stations, de l'ordre des staton par rapport a la premiere partie ✅
-        - gestion metadonne max_link_capacity similaire au max drones
+        - gestion metadonne max_link_capacity gestion ✅
 
 
 ### 4. Requierement

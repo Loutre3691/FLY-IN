@@ -16,7 +16,8 @@ class ConfigParsing():
         self.station_names: list = []               # Liste des noms de stations
         self.used_coordinates: set = set()          # Set des coordonnées utilisées
         self.stations_data: dict = {}               # Dictionnaire complet des stations
-        self.connections_data: list = []            # liste de tuple  des connections
+        self.connections_data: dict = {}            # {(stationA, stationB): {metadata}}
+        self.neighbor_station: dict = {}            # dict des stations voisines
         self.raw_lines = map.readlines()            # Lignes brutes du fichier
         self.cleaned_lines = ConfigMap.clean_raw_lines(self.raw_lines)
 
@@ -24,7 +25,13 @@ class ConfigParsing():
             print("Error: Not found file")
         
         self.parsed_config = self.parse_config_file(self.cleaned_lines)      # Configuration finale
-        
+
+        # print(f"nom des station: {self.station_names}")
+        # print(f"dict des stations: {self.stations_data}")
+        print(f"connection: {self.connections_data}")
+        # print(f"station voisine: {self.neighbor_station}")
+
+
     def parse_config_file(self, map: list[str]):
         """
         Analyse les lignes de configuration nettoyées et les convertit en dictionnaire.
@@ -100,8 +107,9 @@ class ConfigParsing():
 
         # parsing de la partie connection
         value_connection = config_dict.get("connection", [None])
-        Connection.parse_connection(value_connection, self.station_names, self.connections_data, self.stations_data)
+        Connection.parse_connection(value_connection, self.station_names, self.connections_data, self.neighbor_station)
 
+        
 
 class ConfigMap():
     """
@@ -152,6 +160,8 @@ class Station(ABC):
         
         # split pour separer nom + coordonnees des metadata entre [] -> creation de 2 listes separees
         for first_split in value:
+            if first_split is None:
+                continue
             part = first_split.split("[")
             station_data, metadata_items = part[0].split(), part[1].strip("]").split()
             # station_data -> Données principales (nom + coords)
@@ -255,47 +265,45 @@ class Connection():
     '''
         
     @staticmethod
-    def parse_connection(value_connection, station_names, connections_data, stations_data) -> None:
-        connected_stations = []  # Stations trouvées dans les connections
-        dict_max_link = {}
+    def parse_connection(value_connection, station_names, connections_data, neigbhor_station) -> None:
+        check_list_dubble = []
+        connected_stations = set()
 
         for item in value_connection:
-            max_link = None
+            link_connection = {}
+
             if "[" in item:
                 part = item.split("[")
-                connection_pair = sorted(set(part[0].split("-")))
-                if part[1]:
-                    max_link = part[1]
-                    max_link = max_link.split("]")
-                    max_link = max_link[0]
-                    key, value = max_link.split("=")
-                    dict_max_link[key] = value
-    
+                connection_pair = [s.strip() for s in part[0].split("-")]
+
+                key, value = part[1].strip("]").split("=")
+                link_connection[key] = value
+
             # Paire de stations d'une connection
             else:
-                connection_pair = sorted(set(item.split("-")))
-
-                     
+                connection_pair = [s.strip() for s in item.split("-")]
+        
             # gestion nbre de station min 2 
             if len(connection_pair) != 2:
                 raise ValueError("You must give 2 station")
-
-            # gestion des doublons de chaque connection + ajout a la liste
-            if connection_pair in connections_data:
-                raise ValueError(f"{connection_pair} is already exists, you can't have duplicate connections")
-            else:
-                connections_data.append(tuple(connection_pair))
             
-            # gestion du nom de chaque station par rapport a la liste des stations creer dans la classe parse_stations
-            for connection in connections_data:
-                for station in connection:
-                    if not station in connected_stations:
-                        connected_stations.append(station)
-     
-        if set(connected_stations) != set(station_names):
-            raise ValueError("the stations in 'connection' doesn't same order in list stations in first part")     
+            connected_stations.add(connection_pair[0])
+            connected_stations.add(connection_pair[1])
 
-        
+            # gestion des doublons de pair de station
+            if connection_pair in check_list_dubble:
+                raise ValueError("attention doublon")
+            else:
+                check_list_dubble.append(connection_pair)
+            
+             # stockage de la connexion avec ses metadata (vide si aucune)
+            connections_data[tuple(connection_pair)] = link_connection
+
+            # ajout du voisin directionnel pour le graphe
+            neigbhor_station.setdefault(connection_pair[0], []).append(connection_pair[1])
+
+        if connected_stations != set(station_names):
+            raise ValueError("stations in 'connection' not similar at 'stations names'")
             
 
             
