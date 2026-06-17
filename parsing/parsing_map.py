@@ -26,7 +26,7 @@ class ConfigParsing():
         
         self.parsed_config = self.parse_config_file(self.cleaned_lines)      # Configuration finale
 
-
+        # print(self.stations_data)
     def parse_config_file(self, map: list[str]):
         """
         Analyse les lignes de configuration nettoyées et les convertit en dictionnaire.
@@ -56,6 +56,8 @@ class ConfigParsing():
                 slice = line.split(":", 1)
                 key = slice[0].strip()
                 value = slice[1].strip()
+                if not slice[1]:
+                    raise ValueError("you must give a station and coordonates")
             
             # gestion d'erreur si mauvaise cle inscrite dans le file.txt
             if not key in order_key:
@@ -168,11 +170,14 @@ class Station(ABC):
         zone_list = ['restricted', 'priority', 'blocked', 'normal']
 
         # split pour separer nom + coordonnees des metadata entre [] -> creation de 2 listes separees
-        for i, first_split in value:
-            if first_split is None:
+        for i, line in value:
+            if '#' in line:
+                line = line[:line.index('#')].strip()
+            if not line:
                 continue
-            part = first_split.split("[")
-            station_data, metadata_items = part[0].split(), part[1].strip("]").split()
+            part = line.split("[")
+            station_data = part[0].split()
+            metadata_items = part[1].strip("]").split() if len(part) > 1 else []
             # station_data -> Données principales (nom + coords)
             # metadata_items ->  Éléments de métadonnées
 
@@ -293,11 +298,12 @@ class Connection():
             if len(connection_pair) != 2:
                 raise ValueError(f"Line {i}: a connection must have exactly 2 stations")
 
+
             connected_stations.add(connection_pair[0])
             connected_stations.add(connection_pair[1])
-
+   
             # gestion des doublons de pair de station
-            if connection_pair in check_list_dubble:
+            if sorted(connection_pair) in check_list_dubble:
                 raise ValueError(f"Line {i}: duplicate connection {connection_pair}")
             else:
                 check_list_dubble.append(connection_pair)
