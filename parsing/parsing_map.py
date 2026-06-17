@@ -134,11 +134,27 @@ class ConfigMap():
     """
     @staticmethod
     def clean_raw_lines(maplines) -> list:
+        """
+        Nettoie les lignes brutes du fichier de configuration en supprimant les commentaires,
+        les lignes vides et les espaces superflus.
+
+        Pour chaque ligne, la méthode :
+        - supprime les espaces en début et fin de ligne
+        - ignore les lignes vides et celles commençant par '#'
+        - tronque les lignes contenant un '#' en milieu de ligne (commentaire inline)
+        - numérote chaque ligne conservée (à partir de 1) pour faciliter les messages d'erreur
+        """
+
         cleaned_txt = []
 
+        # gestion des # dans le .txt
         for i, line in enumerate(maplines, 1):
             line = line.strip()
             if not line or line.startswith('#'):
+                continue
+            if '#' in line:
+                line = line[:line.index('#')].strip()
+            if not line:
                 continue
             cleaned_txt.append((i, line))
         return cleaned_txt
@@ -242,7 +258,6 @@ class Station(ABC):
             }
 
 
-
 class ConfigStartHub(Station):
     '''
     ConfigStartHub gere la partie start dans le parsing du file.txt, relie a la staticmethod de 
@@ -274,6 +289,33 @@ class Connection():
         
     @staticmethod
     def parse_connection(value_connection, station_names, connections_data, neigbhor_station) -> None:
+        """
+        Analyse les lignes de connexion du fichier de configuration et construit les structures de données du graphe(voisin).
+
+        Pour chaque connexion déclarée, la méthode :
+        - sépare la paire de stations et les métadonnées optionnelles entre crochets (ex: [max_link_capacity=3])
+        - vérifie qu'une connexion relie exactement 2 stations
+        - détecte les connexions en double (paires identiques dans n'importe quel ordre)
+        - vérifie que l'ensemble des stations connectées correspond exactement aux stations déclarées
+        - stocke la connexion et ses métadonnées dans connections_data
+        - enregistre les voisins directionnels dans neigbhor_station pour la construction du graphe
+
+        Arguments:
+            value_connection (list[tuple[int, str]]) : Liste de tuples (numéro de ligne, contenu brut)
+                                                       issus de la clé 'connection' du fichier de config.
+            station_names (list[str])                : Liste des noms de stations déjà déclarées
+                                                       (start_hub, hub, end_hub).
+            connections_data (dict)                  : Dictionnaire à remplir — clé : tuple(stationA, stationB),
+                                                       valeur : dict de métadonnées (ex: {'max_link_capacity': 3}).
+            neigbhor_station (dict)                  : Dictionnaire à remplir — clé : nom de station,
+                                                       valeur : liste des stations voisines directes.
+
+        Lève:
+            ValueError : si une valeur de métadonnée est invalide (max_link_capacity < 1),
+                         si une connexion ne contient pas exactement 2 stations,
+                         si une connexion est déclarée en double,
+                         ou si les stations connectées ne correspondent pas aux stations déclarées.
+        """
         check_list_dubble = []
         connected_stations = set()
 
@@ -306,7 +348,7 @@ class Connection():
             if sorted(connection_pair) in check_list_dubble:
                 raise ValueError(f"Line {i}: duplicate connection {connection_pair}")
             else:
-                check_list_dubble.append(connection_pair)
+                check_list_dubble.append(sorted(connection_pair))
 
             # stockage de la connexion avec ses metadata (vide si aucune)
             connections_data[tuple(connection_pair)] = link_connection
