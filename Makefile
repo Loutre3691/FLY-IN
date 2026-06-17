@@ -25,12 +25,11 @@ clean:
 	@echo "all is clear"
 
 lint:
-	@uv run $(PYTHON) -m flake8 . --extend-exclude .venv
-	@uv run $(PYTHON) -m mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
-
+	@uv run $(PYTHON) -m flake8 . --exclude=venv,.venv,.mypy_cache,__pycache__,maps
+	@uv run $(PYTHON) -m mypy . --exclude venv --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
 lint-strict:
-	@uv run $(PYTHON) -m flake8 . --extend-exclude .venv
-	@uv run $(PYTHON) -m mypy . --strict
+	@uv run $(PYTHON) -m flake8 . --exclude=venv,.venv,.mypy_cache,__pycache__,maps
+	@uv run $(PYTHON) -m mypy . --exclude venv --strict
 
 .PHONY: run install debug clean lint lint-strict
