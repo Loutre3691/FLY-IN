@@ -32,7 +32,6 @@ class ConfigParsing():
 
         self.parse_config_file(self.cleaned_lines)
 
-        # print(self.stations_data)
     def parse_config_file(self, map: list[tuple[int, str]]) -> None:
         """
         Analyse les lignes de configuration nettoyées et les convertit en
@@ -226,7 +225,7 @@ class Station(ABC):
         '''
         color_list = ['green', 'blue', 'red', 'orange',
                       'purple', 'cyan', 'gray', 'yellow',
-                      'magenta', 'gold', 'lime', 'brown']
+                      'magenta', 'gold', 'lime', 'brown', 'white']
         zone_list = ['restricted', 'priority', 'blocked', 'normal']
 
         # split pour separer nom + coordonnees des metadata entre
@@ -291,27 +290,23 @@ class Station(ABC):
                     raise ValueError(
                         f"Line {i}: you must write a color after 'color='")
                 elif station_metadata['color'] not in color_list:
-                    raise ValueError(
-                        f"Line {i}: color '{station_metadata['color']}'"
-                        f" does not exist")
-
+                    station_metadata['color'] = 'white'
             # gestion erreur pour les valeurs de 'zone=....'
             if 'zone' in station_metadata:
                 if not station_metadata['zone']:
                     raise ValueError(
                         f"Line {i}: you must write a zone after 'zone='")
-                elif station_metadata['zone'] not in zone_list:
-                    raise ValueError(
-                        f"Line {i}: zone '{station_metadata['zone']}'"
-                        f" does not exist")
+                if station_metadata['zone'] not in zone_list:
+                    station_metadata['zone'] = 'normal'
 
             # gestion erreur pour les valeurs de 'max_drones=....'
             if 'max_drones' in station_metadata:
-                if int(station_metadata['max_drones']) < 1:
-                    raise ValueError(
-                        f"Line {i}: 'max_drones' must be at least 1")
+                if (
+                    not station_metadata['max_drones']
+                    or int(station_metadata['max_drones']) < 1
+                ):
+                    station_metadata['max_drones'] = 1
 
-            # creation du dictionnaire final qui pourra etre reutilise
             # pour l'algo avec comme cle le nom  de la station
             # et ensuite un dictionnaire des clees :
             #  coord, zone, color, max_drone)

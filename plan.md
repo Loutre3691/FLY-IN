@@ -22,9 +22,10 @@
         - parsing sur connection (class ConfigConnection) ✅
         - gestion validation des stations, de l'ordre des staton par rapport a la premiere partie ✅
         - gestion metadonne max_link_capacity gestion ✅
-
+        - gestion des metadata par default color zone max_drone max_linK_capacity ✅
 
 ### 4. Requierement
+        - 
 
 ### 5. Creation des zones(normal, blocked, restricted, priority)
 
