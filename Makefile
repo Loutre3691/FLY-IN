@@ -1,6 +1,6 @@
 PYTHON = python3
 UV = uv
-SRC = fly_in.py
+SRC = main.py
 MAP ?=
 
 run:

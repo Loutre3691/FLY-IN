@@ -225,7 +225,7 @@ class Station(ABC):
         '''
         color_list = ['green', 'blue', 'red', 'orange',
                       'purple', 'cyan', 'gray', 'yellow',
-                      'magenta', 'gold', 'lime', 'brown', 'white']
+                      'magenta', 'gold', 'lime', 'brown']
         zone_list = ['restricted', 'priority', 'blocked', 'normal']
 
         # split pour separer nom + coordonnees des metadata entre
@@ -290,7 +290,11 @@ class Station(ABC):
                     raise ValueError(
                         f"Line {i}: you must write a color after 'color='")
                 elif station_metadata['color'] not in color_list:
-                    station_metadata['color'] = 'white'
+                    station_metadata['color'] = 'cyan'
+
+            else: 
+                station_metadata['color'] = 'cyan'
+            
             # gestion erreur pour les valeurs de 'zone=....'
             if 'zone' in station_metadata:
                 if not station_metadata['zone']:
@@ -299,13 +303,17 @@ class Station(ABC):
                 if station_metadata['zone'] not in zone_list:
                     station_metadata['zone'] = 'normal'
 
+            else:
+                station_metadata['zone'] = 'normal'
+
             # gestion erreur pour les valeurs de 'max_drones=....'
             if 'max_drones' in station_metadata:
                 if (
                     not station_metadata['max_drones']
-                    or int(station_metadata['max_drones']) < 1
+                or int(station_metadata['max_drones']) < 1
                 ):
                     station_metadata['max_drones'] = 1
+
 
             # pour l'algo avec comme cle le nom  de la station
             # et ensuite un dictionnaire des clees :
