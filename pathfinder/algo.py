@@ -8,21 +8,37 @@ ZONE_MAP = {
     'priority': Priority,
 }
 
-priority_queue = [] # liste des stations trie auto qui coute le moin cher
-visited = set() # station deja visite
-distances = {}      # station: coût_minimum_connu / post-it
-previous  = {}      # station: station_précédente 
-
-
-
 class Dijkstra():
+    """
+    Implémente l'algorithme de Dijkstra pour trouver le chemin
+    le moins coûteux entre deux stations dans un réseau de drones.
+
+    Chaque station a un coût d'entrée selon sa zone :
+        normal    → coût 1
+        priority  → coût 1
+        restricted→ coût 2
+        blocked   → interdit (None)
+
+    Le graphe construit ressemble à ça :
+        {
+            'start':      {'neighbors': ['loop_a'],          'cost': 1},
+            'loop_a':     {'neighbors': ['start', 'loop_b', 'loop_d'], 'cost': 1},
+            'exit_point': {'neighbors': ['loop_b', 'goal'],  'cost': 2},
+            ...
+        }
+
+    Attributs:
+        graph (dict) : le graphe complet station -> voisins + coût
+    """
+
     def __init__(self, stations_data, neighbor_station, connections_data) -> None:
         self.stations_data = stations_data
         self.neighbor_station = neighbor_station
         self.connections_data = connections_data
         self.graph = {}
 
-        # permet de creer mo graph avec station: neigbor: {station1, station2, cost}
+        # Construction du graphe : pour chaque station on calcule
+        # son coût via sa zone et on récupère ses voisins
         for station, data in stations_data.items():
             zone_class = ZONE_MAP[data['zone']]
             data['cost'] = zone_class.cost
@@ -31,19 +47,97 @@ class Dijkstra():
             self.graph[station] = {
                 'neighbors': neighbor_station.get(station, []),
                 'cost': data['cost'],
-            }                    
-        cost = 0
-        for step in self.graph:
-            if not step in visited:
-                visited.add(step)
-                for neighbors in self.graph[step]['neighbors']:
-                    print(neighbors)
-                print()
-                cost += self.graph[step]['cost']
-                distances[step] = cost
+            }
+
+        self.find_path('start', 'goal')
 
 
-                # print(f"{step} :{cost}")
+    def find_path(self, start, goal):
+        """
+        Trouve le chemin le moins coûteux de 'start' à 'goal'.
+
+        PRINCIPE (les post-its) :
+        ┌─────────────────────────────────────────────────────┐
+        │  Au départ, toutes les stations ont un coût = inf   │
+        │  sauf 'start' = 0.                                  │
+        │  On visite toujours la station la MOINS CHÈRE       │
+        │  en premier (grâce à priority_queue).               │
+        │  À chaque visite, on met à jour le coût des         │
+        │  voisins si on a trouvé un chemin moins cher.       │
+        └─────────────────────────────────────────────────────┘
+
+        Variables :
+            priority_queue  : file triée automatiquement par coût,
+                              contient des tuples (coût, station).
+                              heappop() sort toujours le moins cher.
+
+            visited (set)   : stations déjà traitées, on ne les
+                              revisite pas.
+
+            distances (dict): le "post-it" de chaque station,
+                              coût minimum connu pour l'atteindre.
+                              Ex: {'start': 0, 'loop_a': 1, ...}
+
+            previous (dict) : pour chaque station, depuis quelle
+                              station on est arrivé.
+                              Ex: {'loop_a': 'start',
+                                   'loop_b': 'loop_a', ...}
+
+        BOUCLE PRINCIPALE :
+            1. Prendre la station la moins chère (heappop)
+            2. Si déjà visitée → ignorer
+            3. Pour chaque voisin :
+                 new_cost = coût_actuel + coût_du_voisin
+                 si new_cost < distances[voisin] :
+                     → mettre à jour distances et previous
+                     → ajouter le voisin dans la queue
+
+        RECONSTRUCTION DU CHEMIN (après la boucle) :
+            On repart de 'goal' et on remonte via previous
+            jusqu'à 'start', puis on inverse la liste.
+            Ex: goal → exit_point → loop_b → loop_a → start
+                       ↓ inversé
+                start → loop_a → loop_b → exit_point → goal
+        """
+        priority_queue = []
+        heapq.heappush(priority_queue, (0, start))
+        visited = set()
+        distances = {station: float('inf') for station in self.graph}
+        distances[start] = 0
+        previous = {}
+
+        while priority_queue:
+            current_cost, current_station = heapq.heappop(priority_queue)
+            if current_station in visited:
+                continue
+
+            visited.add(current_station)
+
+            for neighbor in self.graph[current_station]['neighbors']:
+                new_cost = self.graph[neighbor]['cost'] + current_cost
+                if new_cost < distances[neighbor]:
+                    distances[neighbor] = new_cost
+                    previous[neighbor] = current_station
+                    heapq.heappush(priority_queue, (new_cost, neighbor))
+
+        # Reconstruction du chemin depuis goal → start, puis on inverse
+        path = []
+        while goal in previous:
+            path.append(goal)
+            goal = previous[goal]
+
+        path = [start] + path[::-1]
+
+        print(path)
+            
+
+  
+                
+    
+
+                
+
+
 
 
 

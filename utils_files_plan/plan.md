@@ -29,15 +29,24 @@
 
 ### 5. Creation des zones(normal, blocked, restricted, priority)
         # dans dossier models -> zone.py
-        - creation des classes zones 
+        - creation des classes zones ✅
+        - les couts pour chaque classe ✅
+        - restreindre les zones bloque 
 
 ### 6. Creation des couleurs selon les zones
         # dans dossier models -> colors.py
         - creation des classes zones 
 
 ### 7. connexion entre les zones
+        - creation d un dictionnaire de voisin ✅
+        
 
 ### 8. Algo (easy, medium, hard, challenge)
+        - premeire approche de lalgo avec la gestion de dijkstra algo ✅
+        - gestion des zones deja visite ✅
+        - gestion du previous pour recuperer le chemin le bon ✅
+        - utilisation de heapq pour pouvoir recuperer le cout le plus bas a chaque tour ✅
+
 
 ### 9. visuel (playgame) 
 
