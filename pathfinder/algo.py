@@ -34,7 +34,16 @@ class Dijkstra():
             }                    
         cost = 0
         for step in self.graph:
-            print (self.graph[step]['neighbors'])
+            if not step in visited:
+                visited.add(step)
+                for neighbors in self.graph[step]['neighbors']:
+                    print(neighbors)
+                print()
+                cost += self.graph[step]['cost']
+                distances[step] = cost
+
+
+                # print(f"{step} :{cost}")
 
 
 
