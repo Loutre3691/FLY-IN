@@ -1,4 +1,5 @@
 from models.zone import Normal, Blocked, Restricted, Priority
+import heapq
 
 ZONE_MAP = {
     'normal': Normal,
@@ -7,6 +8,11 @@ ZONE_MAP = {
     'priority': Priority,
 }
 
+priority_queue = [] # liste des stations trie auto qui coute le moin cher
+visited = set() # station deja visite
+distances = {}      # station: coût_minimum_connu / post-it
+previous  = {}      # station: station_précédente 
+
 
 
 class Dijkstra():
@@ -14,20 +20,22 @@ class Dijkstra():
         self.stations_data = stations_data
         self.neighbor_station = neighbor_station
         self.connections_data = connections_data
+        self.graph = {}
 
-        print(neighbor_station)
-        # print()
-
-        # retourne le cout de chaque station
+        # permet de creer mo graph avec station: neigbor: {station1, station2, cost}
         for station, data in stations_data.items():
-            cost = 0
             zone_class = ZONE_MAP[data['zone']]
             data['cost'] = zone_class.cost
-            neighbor_station.get(station)
-            # for connection in connections_data:
-                
+            stations_data[station] = data
 
-            
+            self.graph[station] = {
+                'neighbors': neighbor_station.get(station, []),
+                'cost': data['cost'],
+            }                    
+        cost = 0
+        for step in self.graph:
+            print (self.graph[step]['neighbors'])
+
 
 
 

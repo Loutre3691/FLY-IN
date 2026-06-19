@@ -420,9 +420,11 @@ class Connection():
             # stockage de la connexion avec ses metadata (vide si aucune)
             connections_data[tuple(connection_pair)] = link_connection
 
-            # ajout du voisin directionnel pour le graphe
+            # ajout du voisin dans les deux sens pour le graphe
             neigbhor_station.setdefault(connection_pair[0],
                                         []).append(connection_pair[1])
+            neigbhor_station.setdefault(connection_pair[1],
+                                        []).append(connection_pair[0])
 
         if connected_stations != set(station_names):
             raise ValueError(
