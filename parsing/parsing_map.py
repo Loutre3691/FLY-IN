@@ -26,6 +26,7 @@ class ConfigParsing():
         # dict des stations voisines
         self.raw_lines = map.readlines()  # Lignes brutes du fichier
         self.cleaned_lines = ConfigMap.clean_raw_lines(self.raw_lines)
+        self.drones = 0
 
         if not self.cleaned_lines:
             print("Error: Not found file")
@@ -123,6 +124,8 @@ class ConfigParsing():
             line_num, drone_count = config_dict.get(
                 "nb_drones", [(None, None)])[0]
             ConfigDrone(nb_drones=drone_count)
+            self.drones = int(drone_count)
+            
         except ValidationError:
             line_num, _ = config_dict.get("nb_drones", [(None, None)])[0]
             raise ValueError(f"Line {line_num}: 'nb_drones' must be a number "

@@ -42,6 +42,8 @@ class Dijkstra():
         for station, data in stations_data.items():
             zone_class = ZONE_MAP[data['zone']]
             data['cost'] = zone_class.cost
+            if data['cost'] is None:
+                continue
             stations_data[station] = data
 
             self.graph[station] = {
@@ -108,20 +110,30 @@ class Dijkstra():
 
         while priority_queue:
             current_cost, current_station = heapq.heappop(priority_queue)
+            
             if current_station in visited:
                 continue
 
             visited.add(current_station)
 
             for neighbor in self.graph[current_station]['neighbors']:
+                if not neighbor in self.graph:
+                    continue 
                 new_cost = self.graph[neighbor]['cost'] + current_cost
+
                 if new_cost < distances[neighbor]:
                     distances[neighbor] = new_cost
                     previous[neighbor] = current_station
                     heapq.heappush(priority_queue, (new_cost, neighbor))
 
+
         # Reconstruction du chemin depuis goal → start, puis on inverse
         path = []
+        if distances[goal] == float('inf'):
+            print("\033[1;31m\n 🛰  Houston, we have a problem: drones are lost "
+                  "in the void, goal station is unreachable! 🛰 \n\033[0m")
+            exit(1)
+
         while goal in previous:
             path.append(goal)
             goal = previous[goal]

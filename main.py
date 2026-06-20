@@ -1,5 +1,5 @@
 from parsing.parsing_map import ConfigParsing
-from pathfinder.algo import Dijkstra
+from pathfinder.simulator import SimulatorDrones
 import sys
 
 
@@ -39,6 +39,6 @@ if __name__ == "__main__":
         sys.exit()
     else:
         config = main()
-        Dijkstra(config.stations_data, config.neighbor_station, config.connections_data)
+        SimulatorDrones(config.drones, config.stations_data, config.neighbor_station, config.connections_data)
         
         

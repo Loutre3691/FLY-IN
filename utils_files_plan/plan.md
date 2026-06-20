@@ -41,11 +41,12 @@
         - creation d un dictionnaire de voisin ✅
         
 
-### 8. Algo (easy, medium, hard, challenge)
-        - premeire approche de lalgo avec la gestion de dijkstra algo ✅
+### 8. Algo 
+        - premeire approche de l algo avec la gestion de dijkstra algo ✅
         - gestion des zones deja visite ✅
         - gestion du previous pour recuperer le chemin le bon ✅
         - utilisation de heapq pour pouvoir recuperer le cout le plus bas a chaque tour ✅
+        - gestion de la zone blocked, contourne ce dernier ✅
 
 
 ### 9. visuel (playgame) 
