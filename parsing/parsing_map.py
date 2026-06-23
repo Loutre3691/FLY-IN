@@ -142,6 +142,7 @@ class ConfigParsing():
             value_hub, self.station_names, self.used_coordinates,
             self.stations_data)
         value_end_hub = config_dict.get("end_hub", [(None, None)])
+        end_hub_id = len(self.station_names)
         ConfigEndHub.parse_stations(
             value_end_hub, self.station_names, self.used_coordinates,
             self.stations_data)
@@ -151,7 +152,21 @@ class ConfigParsing():
         Connection.parse_connection(
             value_connection, self.station_names,
             self.connections_data, self.neighbor_station)
-
+        
+        end_name = self.station_names[end_hub_id]
+        if end_name != 'goal':
+            self.stations_data['goal'] = self.stations_data.pop(end_name)
+            self.station_names[end_hub_id] = 'goal'
+            self.neighbor_station['goal'] = self.neighbor_station.pop(end_name)
+            for st in self.neighbor_station:
+                self.neighbor_station[st] = [
+                    'goal' if n == end_name else n
+                    for n in self.neighbor_station[st]
+                ]
+            self.connections_data = {
+                (('goal' if a == end_name else a), ('goal' if b == end_name else b)): v
+                for (a, b), v in self.connections_data.items()
+            }
 
 class ConfigMap():
     """

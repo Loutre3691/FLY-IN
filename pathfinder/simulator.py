@@ -1,4 +1,6 @@
+import copy
 from .algo import Dijkstra
+
 
 
 class SimulatorDrones():
@@ -19,31 +21,38 @@ class SimulatorDrones():
                 self.current_drones[station] = {"max": float('inf'), "current": 0}
 
         self.current_drones['start']['current'] = nb_drones
+        self.current_drones['goal']['max'] = float('inf')
 
         dijkstra = Dijkstra(stations_data, neighbor_station, connections_data)
-        
-        # parcourir les stations une a une, et recupereer son voisin voir si chaque voisin a la possibilite 
-        # d accueillir un drone grace a la diff entre current et max, si de la place le current de la station de base
-        # se vide et lautre se rempli selon le calcul dijkstra
-        while self.current_drones['goal']['current'] != nb_drones:
-                copy_current = self.current_drones
-                paths = dijkstra.find_path('start', 'goal')
-                for station in self.current_drones:
-                    for path in paths:
+        nb_tr = 0
 
-                        if path == station:
-                            continue
+        # pour chaque station faire l algo dijkstra et retoruner le chemin, verifier qu' il y esy au moin 2 stations
+        # et du conditions pour diff entre max et current et rajouter un drone a la next station et enlver a la stations actuelle 
+        while self.current_drones['goal']['current'] != nb_drones:  
+            snapshot = copy.deepcopy(self.current_drones) # copie a la base pour la fluidite pour envoyer au fur et a mesure
+            for station in snapshot:
+                paths = dijkstra.find_path(station, 'goal')
 
-                        if self.current_drones[path]['current'] < self.current_drones[path]['max']:
-                            if (self.current_drones[path]['current'] < nb_drones and 
-                                self.current_drones[station]['current'] > 0):
-                                    self.current_drones[path]['current'] += 1
-                                    self.current_drones[station]['current'] -= 1
-                            
-                        print(self.current_drones)
-                        print()
+                # verification qu'il ya bien deux arguments dans le paths
+                if len(paths) >= 2:
                     
-                    paths = dijkstra.find_path(path, 'goal')
+                    place = snapshot[paths[1]]['max'] - snapshot[paths[1]]['current']
+                    
+                    min_drones =  min(snapshot[station]['current'], place)
+
+                    if snapshot[paths[1]]['current'] < snapshot[paths[1]]['max']:
+                        if snapshot[station]['current'] > 0:
+                            self.current_drones[paths[1]]['current'] += min_drones
+                            self.current_drones[station]['current'] -= min_drones
+            nb_tr += 1
+            print(self.current_drones)
+
+            print()
+        print(nb_tr)
+                
+                
+                    
+            
             
                    
                         
