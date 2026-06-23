@@ -2,66 +2,78 @@ import copy
 from .algo import Dijkstra
 
 
-
 class SimulatorDrones():
-    # tous les drones commencent a start ignorer le max capacity de drone
-    # gestion du nombre de drones
-    # verification capacites (stations + liens)
-    # on appel dijkstra quand un drone a besoin dun chemin 
-    # dijkstra renvoi le chemin pour un drone le best
+    """
+    Simule le déplacement de drones de 'start' vers 'goal' tour par tour.
+
+    À chaque tour, tous les drones avancent simultanément d'une station
+    vers la prochaine étape de leur chemin optimal (calculé par Dijkstra),
+    dans la limite de la capacité de la station suivante.
+
+    Le snapshot en début de tour garantit que les mouvements sont bien
+    simultanés : un drone qui arrive dans une station ne peut pas en repartir
+    dans le même tour.
+
+    Attributs :
+        nb_drones (int)       : nombre total de drones à faire arriver à goal
+        current_drones (dict) : état courant de chaque station
+                                {'max': capacité max, 'current': drones présents}
+        stations_data (dict)  : données brutes des stations issues du parsing
+    """
+
     def __init__(self, nb_drones, stations_data, neighbor_station, connections_data) -> None:
         self.nb_drones = nb_drones
-        self.current_drones = {} # max drone par station et quantite de drone par station
+        self.current_drones = {}
         self.stations_data = stations_data
 
+        # Construction du dict de capacités : max depuis les métadonnées,
+        # inf si pas de max_drones défini dans la map
         for station in stations_data:
             if stations_data[station].get('max_drones'):
                 self.current_drones[station] = {"max": int(stations_data[station]['max_drones']), "current": 0}
             else:
                 self.current_drones[station] = {"max": float('inf'), "current": 0}
 
+        # Tous les drones partent de start (max de start ignoré selon le sujet)
         self.current_drones['start']['current'] = nb_drones
+        # goal n'a pas de limite : tous les drones doivent pouvoir s'y accumuler
         self.current_drones['goal']['max'] = float('inf')
 
         dijkstra = Dijkstra(stations_data, neighbor_station, connections_data)
         nb_tr = 0
 
-        # pour chaque station faire l algo dijkstra et retoruner le chemin, verifier qu' il y esy au moin 2 stations
-        # et du conditions pour diff entre max et current et rajouter un drone a la next station et enlver a la stations actuelle 
-        while self.current_drones['goal']['current'] != nb_drones:  
-            snapshot = copy.deepcopy(self.current_drones) # copie a la base pour la fluidite pour envoyer au fur et a mesure
+        # Boucle principale : on tourne tant que tous les drones ne sont pas à goal
+        while self.current_drones['goal']['current'] != nb_drones:
+
+            # Snapshot de l'état au début du tour : permet les mouvements simultanés.
+            # On lit toujours depuis le snapshot (état figé) et on écrit dans
+            # current_drones, donc un drone arrivé ce tour ne repart pas ce même tour.
+            snapshot = copy.deepcopy(self.current_drones)
+
             for station in snapshot:
+                # Calcul du chemin optimal depuis cette station jusqu'à goal
                 paths = dijkstra.find_path(station, 'goal')
 
-                # verification qu'il ya bien deux arguments dans le paths
+                # Si la station est déjà goal (chemin d'un seul élément), rien à faire
                 if len(paths) >= 2:
-                    
-                    place = snapshot[paths[1]]['max'] - snapshot[paths[1]]['current']
-                    
-                    min_drones =  min(snapshot[station]['current'], place)
+                    next_st = paths[1]
 
-                    if snapshot[paths[1]]['current'] < snapshot[paths[1]]['max']:
+                    # Place disponible dans la prochaine station
+                    place = snapshot[next_st]['max'] - snapshot[next_st]['current']
+
+                    # Nombre de drones pouvant bouger : limité par les drones disponibles
+                    # et la place dans la station suivante
+                    min_drones = min(snapshot[station]['current'], place)
+
+                    # On déplace seulement si la station suivante a de la place
+                    # et que la station courante a des drones à envoyer
+                    if snapshot[next_st]['current'] < snapshot[next_st]['max']:
                         if snapshot[station]['current'] > 0:
-                            self.current_drones[paths[1]]['current'] += min_drones
+                            self.current_drones[next_st]['current'] += min_drones
                             self.current_drones[station]['current'] -= min_drones
+
             nb_tr += 1
             print(self.current_drones)
-
             print()
-        print(nb_tr)
-                
-                
-                    
-            
-            
-                   
-                        
-                
-                
-            
-                
-                            
-        
-        
-                            
 
+        print(nb_tr)
