@@ -31,7 +31,7 @@ class Dijkstra():
         graph (dict) : le graphe complet station -> voisins + coût
     """
 
-    def __init__(self, stations_data, neighbor_station, connections_data) -> None:
+    def __init__(self, stations_data, neighbor_station, connections_data):
         self.stations_data = stations_data
         self.neighbor_station = neighbor_station
         self.connections_data = connections_data
@@ -54,7 +54,8 @@ class Dijkstra():
         self.find_path('start', 'goal')
 
 
-    def find_path(self, start, goal):
+
+    def find_path(self, start, goal) -> list:
         """
         Trouve le chemin le moins coûteux de 'start' à 'goal'.
 
@@ -139,8 +140,7 @@ class Dijkstra():
             goal = previous[goal]
 
         path = [start] + path[::-1]
-
-        print(path)
+        return (path)
             
 
   
