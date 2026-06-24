@@ -406,6 +406,7 @@ class Connection():
             if item is None:
                 continue
             link_connection = {}
+            
 
             if "[" in item:
                 part = item.split("[")
@@ -419,6 +420,9 @@ class Connection():
             # Paire de stations d'une connection
             else:
                 connection_pair = [s.strip() for s in item.split("-")]
+                key, value = "max_link_capacity", 1
+                link_connection[key] = int(value)
+            
 
             # gestion nbre de station min 2
             if len(connection_pair) != 2:

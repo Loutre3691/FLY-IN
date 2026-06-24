@@ -33,6 +33,7 @@ class SimulatorDrones():
                 self.current_drones[station] = {"max": int(stations_data[station]['max_drones']), "current": 0}
             else:
                 self.current_drones[station] = {"max": float('inf'), "current": 0}
+  
 
         # Tous les drones partent de start (max de start ignoré selon le sujet)
         self.current_drones['start']['current'] = nb_drones
@@ -40,6 +41,10 @@ class SimulatorDrones():
         self.current_drones['goal']['max'] = float('inf')
 
         dijkstra = Dijkstra(stations_data, neighbor_station, connections_data)
+
+        # creation dict pour affichage obligatoire dans terminal
+        drone_positions = {f'D{i+1}': 'start' for i in range(nb_drones)}
+        
         nb_tr = 0
 
         # Boucle principale : on tourne tant que tous les drones ne sont pas à goal
@@ -49,6 +54,7 @@ class SimulatorDrones():
             # On lit toujours depuis le snapshot (état figé) et on écrit dans
             # current_drones, donc un drone arrivé ce tour ne repart pas ce même tour.
             snapshot = copy.deepcopy(self.current_drones)
+            turn_moves = []
 
             for station in snapshot:
                 # Calcul du chemin optimal depuis cette station jusqu'à goal
@@ -57,13 +63,19 @@ class SimulatorDrones():
                 # Si la station est déjà goal (chemin d'un seul élément), rien à faire
                 if len(paths) >= 2:
                     next_st = paths[1]
+                
+                    link = (connections_data.get((station, next_st)) 
+                            or connections_data.get((next_st, station)))
+                  
+                    max_link = (link.get('max_link_capacity') if link else None) or 1
 
                     # Place disponible dans la prochaine station
                     place = snapshot[next_st]['max'] - snapshot[next_st]['current']
 
                     # Nombre de drones pouvant bouger : limité par les drones disponibles
                     # et la place dans la station suivante
-                    min_drones = min(snapshot[station]['current'], place)
+                    min_drones = min(snapshot[station]['current'], place, max_link)
+
 
                     # On déplace seulement si la station suivante a de la place
                     # et que la station courante a des drones à envoyer
@@ -71,9 +83,19 @@ class SimulatorDrones():
                         if snapshot[station]['current'] > 0:
                             self.current_drones[next_st]['current'] += min_drones
                             self.current_drones[station]['current'] -= min_drones
-
+                        
+                        # Récupère les IDs des drones actuellement à 'station'
+                        # (ceux dont la position dans drone_positions correspond à station),
+                        # puis garde seulement les min_drones premiers (ceux qui bougent ce tour).
+                        # Pour chacun : on met à jour sa position et on note le mouvement
+                        # au format 'D1-next_station' dans turn_moves pour l'affichage.
+                        moved = [d for d, pos in drone_positions.items() if pos == station][:min_drones]
+                        for d in moved:
+                            drone_positions[d] = next_st
+                            turn_moves.append(f'{d}-{next_st}')
+            print(' '.join(turn_moves))
             nb_tr += 1
-            print(self.current_drones)
-            print()
+                
+        print(f"\nTotal number tour: {nb_tr}")
 
-        print(nb_tr)
+

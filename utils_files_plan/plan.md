@@ -48,11 +48,21 @@
         - utilisation de heapq pour pouvoir recuperer le cout le plus bas a chaque tour ✅
         - gestion de la zone blocked, contourne ce dernier ✅
 
+### 9. Max_drones
+        - gestion du max drones dans simulator.py ✅
+        - le nbr de tours est bon pour chaque map sauf la challenger ✅
 
-### 9. visuel (playgame) 
 
-### 10. docstring
+### 10. Max_link
+        - incorporer le max_link dans simulator.py 
 
-### 11. Readme
+
+### 10. visuel (playgame) 
+
+### 11. docstring
+        - changement docstring en anglais partout et commentaire
+
+### 1. Readme
 
 ### 12. bonus
+        - gestion du nombre de tours max pour la map challenger, actuellement -> 63 / objectif : <= 45
