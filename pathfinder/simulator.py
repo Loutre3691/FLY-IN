@@ -42,8 +42,9 @@ class SimulatorDrones():
 
         dijkstra = Dijkstra(stations_data, neighbor_station, connections_data)
 
-        # creation dict pour affichage obligatoire dans terminal
+        # creation dict pour affichage obligatoire dans terminal D1 = drone1
         drone_positions = {f'D{i+1}': 'start' for i in range(nb_drones)}
+
         
         nb_tr = 0
 
@@ -83,6 +84,7 @@ class SimulatorDrones():
                         if snapshot[station]['current'] > 0:
                             self.current_drones[next_st]['current'] += min_drones
                             self.current_drones[station]['current'] -= min_drones
+                
                         
                         # Récupère les IDs des drones actuellement à 'station'
                         # (ceux dont la position dans drone_positions correspond à station),
@@ -90,10 +92,12 @@ class SimulatorDrones():
                         # Pour chacun : on met à jour sa position et on note le mouvement
                         # au format 'D1-next_station' dans turn_moves pour l'affichage.
                         moved = [d for d, pos in drone_positions.items() if pos == station][:min_drones]
+                        
                         for d in moved:
                             drone_positions[d] = next_st
                             turn_moves.append(f'{d}-{next_st}')
             print(' '.join(turn_moves))
+
             nb_tr += 1
                 
         print(f"\nTotal number tour: {nb_tr}")
