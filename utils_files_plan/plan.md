@@ -57,7 +57,10 @@
         - incorporer le max_link dans simulator.py 
 
 
-### 10. visuel (playgame) 
+### 10. visuel (pygame)
+        - calcul auto taille fenetre 
+        - scale les images (pygame.transforme.scale) pour s adapter a la fenetre
+        - varaible pour chaque image 
 
 ### 11. docstring
         - changement docstring en anglais partout et commentaire
