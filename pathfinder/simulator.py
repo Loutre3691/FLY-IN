@@ -27,6 +27,7 @@ class DroneSimulator():
         self.stations_data = stations_data
         self.connections_data = connections_data
 
+
         # Construction du dict de capacités : max depuis les métadonnées,
         # inf si pas de max_drones défini dans la map
         for station in stations_data:
@@ -42,13 +43,15 @@ class DroneSimulator():
 
         self.dijkstra = Dijkstra(stations_data, neighbor_station, connections_data)
 
-        # creation dict pour affichage obligatoire dans terminal D1 = drone1
-        self.drone_positions = {f'D{i+1}': 'start' for i in range(nb_drones)}
 
     def run(self):
         """Lance la simulation tour par tour jusqu'à ce que tous les drones atteignent goal."""
         nb_tr = 0
+        # position courante de chaque drone (D1 = drone1, etc.)
+        self.drones_positions = {f'D{i+1}': 'start' for i in range(self.nb_drones)}
         
+        self.history_drones = {}
+
         # Boucle principale : on tourne tant que tous les drones ne sont pas à goal
         while self.current_drones['goal']['current'] != self.nb_drones:
 
@@ -95,15 +98,16 @@ class DroneSimulator():
                         # puis garde seulement les min_drones premiers (ceux qui bougent ce tour).
                         # Pour chacun : on met à jour sa position et on note le mouvement
                         # au format 'D1-next_station' dans turn_moves pour l'affichage.
-                        moved = [d for d, pos in self.drone_positions.items() if pos == station][:min_drones]
+                        moved = [d for d, pos in self.drones_positions.items() if pos == station][:min_drones]
                         
                         for d in moved:
-                            self.drone_positions[d] = next_st
+                            self.drones_positions[d] = next_st
                             turn_moves.append(f'{d}-{next_st}')
+
+            self.history_drones[nb_tr] = copy.deepcopy(self.drones_positions)
             print(' '.join(turn_moves))
 
             nb_tr += 1
-                
         print(f"\nTotal number tour: {nb_tr}")
 
 

@@ -37,10 +37,11 @@ if __name__ == "__main__":
         print("Usage: python script.py fichier.txt")
         sys.exit()
     else:
+    
         config = main()
         sim = DroneSimulator(config.drones, config.stations_data, config.neighbor_station, config.connections_data)
         sim.run()
-        display.Display(config.stations_data)
+        display.Display(config.stations_data, sim.history_drones)
 
 
 

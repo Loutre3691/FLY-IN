@@ -3,6 +3,8 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 import pygame
 import sys
 from parsing.parsing_map import ConfigParsing
+from pathfinder.simulator import DroneSimulator
+
 
 COLOR_MAP = {
     'green':   (34, 139, 34),
@@ -36,15 +38,16 @@ ICONS = {
 }
 
 USER_CHOICE_SIZE = {
-            'little': {'size': (1280, 720)},
-            'medium': {'size': (1920, 1080)},
-            'big': {'size': (3200, 1800)},
+            'little': (1280, 720),
+            'medium': (1920, 1080),
+            'big': (3200, 1800),
         }
         
 
 class Display():
-    def __init__(self, stations_data):
+    def __init__(self, stations_data, drones_positions):
         self.stations_data = stations_data
+        self.drones_positions = drones_positions
         self.windows = None
         self.background = None
         self.start_png = None
@@ -58,6 +61,7 @@ class Display():
         self.min_y = None
         self.marge = 100
         self.coef = 1
+        self.station_pixels = {}
 
         if len(stations_data) > 70:
             print("\033[0;31mError: too many stations (max 70) to display cleanly\033[0m")
@@ -68,22 +72,23 @@ class Display():
         self.load_png()
         Calculate.size_marge(self)
         Calculate.scale(self)
-        self.draw_display()
+        self.draw_stations()
+        self.draw_drones()
         self.run_display()
 
     def ask_size(self):
         choice = input("\033[36myou can choice size display (tape medium or big) :  \033[0m")
 
         if choice == 'little':
-            self.NEW_SIZE_WINDOWS = USER_CHOICE_SIZE['little']['size']
+            self.NEW_SIZE_WINDOWS = USER_CHOICE_SIZE['little']
             self.coef = 1.2
         elif choice == 'medium':
-            self.NEW_SIZE_WINDOWS = USER_CHOICE_SIZE['medium']['size']
+            self.NEW_SIZE_WINDOWS = USER_CHOICE_SIZE['medium']
         elif choice == 'big':
-           self.NEW_SIZE_WINDOWS = USER_CHOICE_SIZE['big']['size']
+           self.NEW_SIZE_WINDOWS = USER_CHOICE_SIZE['big']
            self.coef = 0.8
         else:
-            self.NEW_SIZE_WINDOWS = USER_CHOICE_SIZE['medium']['size']
+            self.NEW_SIZE_WINDOWS = USER_CHOICE_SIZE['medium']
         
         return(self.NEW_SIZE_WINDOWS)
 
@@ -132,16 +137,13 @@ class Display():
         self.zone_png['blocked']= pygame.transform.scale(self.zone_png['blocked'], Calculate.size_icon(self, 'blocked'))
 
 
-    
-
     def color_zone(self, station):
         color = self.stations_data[station]['color']
         if color in COLOR_MAP: 
             return (COLOR_MAP[color])
 
 
-
-    def draw_display(self):
+    def draw_stations(self):
         '''
         Dans cette methode on calculera chaque emplacement de chaque station presentent
         dans self.stations_data
@@ -165,11 +167,13 @@ class Display():
                 centre = (pixel_x + icon_scale[0] // 2), (pixel_y + self.icon_scale[1] // 2)
                 pygame.draw.circle(self.windows, self.color_zone(station), centre, Calculate.size_cercle(self, ICONS['start']['radius']))
                 self.windows.blit(self.start_png, (pixel_x , pixel_y + 5))
+                self.station_pixels['start'] = (pixel_x, pixel_y)
             elif station == 'goal':
                 icon_scale = Calculate.size_icon(self, 'goal')
                 centre = (pixel_x - 100 * self.ratio + self.icon_scale[0] // 2), (pixel_y + self.icon_scale[1] // 2)
                 pygame.draw.circle(self.windows, self.color_zone(station), centre, Calculate.size_cercle(self, ICONS['goal']['radius']))
                 self.windows.blit(self.end_png, (pixel_x - 100 * self.ratio, pixel_y))
+                self.station_pixels['goal'] = (pixel_x, pixel_y)
             else:
                 if data['zone'] == 'normal':
                     icon_scale = Calculate.size_icon(self, 'normal')
@@ -191,7 +195,17 @@ class Display():
                     centre = (pixel_x + self.icon_scale[0] // 2), (pixel_y + self.icon_scale[1] // 2)
                     pygame.draw.circle(self.windows, self.color_zone(station), centre, Calculate.size_cercle(self, ICONS['priority']['radius']))
                     self.windows.blit(self.zone_png['priority'], (pixel_x, pixel_y))
+                self.station_pixels['zone'] = (pixel_x, pixel_y)
             
+          
+    
+    def draw_drones(self):
+        print(self.drones_positions[0])
+        # for tour in self.drones_positions:
+            
+            
+            
+
 
     def run_display(self):
         '''Affichage du pygame'''
@@ -219,13 +233,12 @@ class Calculate():
     def scale_nb_drones(display):
         # permet de calculer le ratio de diminution selon nb on divise par 70 qui est le max 
         nb = len(display.stations_data)
-        print(nb)
         if nb < 30:
             display.ratio = 1 - 0.50 * display.coef * nb  / 30
         elif nb > 30 and nb < 40:
             display.ratio = 1 - 0.50 * display.coef * nb  / 40 
         else:
-            display.ratio = 1 - 0.80 * display.coef * nb  / 100
+            display.ratio = 1 - 0.60 * display.coef * nb / 70 
 
         return display.ratio
 
@@ -234,9 +247,7 @@ class Calculate():
     def size_cercle(display, radius):
         base = display.info.current_w + display.info.current_h
         new = display.NEW_SIZE_WINDOWS[0] + display.NEW_SIZE_WINDOWS[1]
-
         display.size_cercle = new * radius / base * display.ratio
-    
 
         return(display.size_cercle)
     

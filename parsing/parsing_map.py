@@ -29,7 +29,7 @@ class ConfigParsing():
         self.drones = 0
 
         if not self.cleaned_lines:
-            print("Error: Not found file")
+            raise ValueError("Empty file")
 
         self.parse_config_file(self.cleaned_lines)
 
@@ -112,6 +112,8 @@ class ConfigParsing():
                 config_dict[key].append((i, value))
             else:
                 config_dict[key] = [(i, value)]
+
+        
 
         if count_drone != 1:
             raise ValueError(f"Line {i} (end of file): 'nb_drones' is missing")
