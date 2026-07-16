@@ -4,6 +4,7 @@ import pygame
 import sys
 from parsing.parsing_map import ConfigParsing
 from pathfinder.simulator import DroneSimulator
+pygame.font.init()
 
 
 COLOR_MAP = {
@@ -68,23 +69,23 @@ class Display():
             sys.exit(1)
 
         self.NEW_SIZE_WINDOWS = self.ask_size()
+
+        
         self.init_display()
         self.load_png()
         Calculate.size_marge(self)
         Calculate.scale(self)
-        self.draw_stations()
-        self.draw_drones()
         self.run_display()
 
     def ask_size(self):
-        choice = input("\033[36myou can choice size display (tape medium or big) :  \033[0m")
+        self.choice = input("\033[36myou can choice size display (tape medium or big) :  \033[0m")
 
-        if choice == 'little':
+        if self.choice == 'little':
             self.NEW_SIZE_WINDOWS = USER_CHOICE_SIZE['little']
             self.coef = 1.2
-        elif choice == 'medium':
+        elif self.choice == 'medium':
             self.NEW_SIZE_WINDOWS = USER_CHOICE_SIZE['medium']
-        elif choice == 'big':
+        elif self.choice == 'big':
            self.NEW_SIZE_WINDOWS = USER_CHOICE_SIZE['big']
            self.coef = 0.8
         else:
@@ -111,8 +112,6 @@ class Display():
         '''
         telechargement des images dans pygame 
         '''
-       
-        print(self.icon_scale)
 
         self.background = pygame.image.load("display_folder/background.png").convert()
         self.background = pygame.transform.scale(self.background, (self.windows.get_size()))
@@ -195,27 +194,59 @@ class Display():
                     centre = (pixel_x + self.icon_scale[0] // 2), (pixel_y + self.icon_scale[1] // 2)
                     pygame.draw.circle(self.windows, self.color_zone(station), centre, Calculate.size_cercle(self, ICONS['priority']['radius']))
                     self.windows.blit(self.zone_png['priority'], (pixel_x, pixel_y))
-                self.station_pixels['zone'] = (pixel_x, pixel_y)
+                self.station_pixels[station] = (pixel_x, pixel_y)
             
           
     
-    def draw_drones(self):
-        print(self.drones_positions[0])
-        # for tour in self.drones_positions:
-            
-            
-            
+    def draw_drones(self, tour, previous, progression):
+        ''' Dessine les drones selon lemplacement des stations en calculant une progesssion lieneaire
+        grace a progression qui est les etapes de la porgression dans run_display
+        choix de la police egalement et de la taille selon taille map
+        previous est la station de depart ce qui permet de faire le calcul entre la station de depart 
+        la station d arrivee et la progression'''
 
+        size = 40 if self.choice == 'big' else 20 if self.choice == 'little' else 30
+        self.police = pygame.font.SysFont("Arial", size)
+        for drone, station_arrivee in self.drones_positions[tour].items():
+            station_depart = previous[drone]
+            depart_x, depart_y = self.station_pixels[station_depart]
+            arrivee_x, arrivee_y = self.station_pixels[station_arrivee]
+
+            x = depart_x + (arrivee_x - depart_x) * progression
+            y = depart_y + (arrivee_y - depart_y) * progression
+
+            text = self.police.render(drone, True, (255, 255, 255))
+            self.windows.blit(self.drone_png, (x, y))
+            self.windows.blit(text, (x, y))
+     
 
     def run_display(self):
         '''Affichage du pygame'''
-        pygame.display.flip()
+        previous = {drone: 'start' for drone in self.drones_positions[0]}
+        progression_steps = [i * 0.02 for i in range(50)]
+
+        for tour in self.drones_positions:
+            for progression in progression_steps:
+                pygame.event.pump()
+                self.draw_background()
+                self.draw_stations()
+                self.draw_drones(tour, previous, progression)
+                pygame.display.flip()
+                pygame.time.wait(30)
+
+            previous = self.drones_positions[tour]
+
 
         while True :
             for event in pygame.event.get():
                 if event.type==pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+
+
+    def draw_background(self):
+        '''Efface la map'''
+        self.windows.blit(self.background, (0, 0))
 
 
 class Calculate():
@@ -245,6 +276,7 @@ class Calculate():
     
     @staticmethod
     def size_cercle(display, radius):
+        ''' Calcul taille cercle'''
         base = display.info.current_w + display.info.current_h
         new = display.NEW_SIZE_WINDOWS[0] + display.NEW_SIZE_WINDOWS[1]
         display.size_cercle = new * radius / base * display.ratio
@@ -253,6 +285,7 @@ class Calculate():
     
     @staticmethod
     def size_marge(display):
+        '''calcul taille marge'''
         base = display.info.current_w + display.info.current_h
         new = display.NEW_SIZE_WINDOWS[0] + display.NEW_SIZE_WINDOWS[1]
         display.marge = new * display.marge / base
