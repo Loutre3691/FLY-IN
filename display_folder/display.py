@@ -223,7 +223,7 @@ class Display():
     def run_display(self):
         '''Affichage du pygame'''
         previous = {drone: 'start' for drone in self.drones_positions[0]}
-        progression_steps = [i * 0.02 for i in range(50)]
+        progression_steps = [i * 0.05 for i in range(21)]
 
         for tour in self.drones_positions:
             for progression in progression_steps:
