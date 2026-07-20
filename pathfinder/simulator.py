@@ -1,4 +1,5 @@
 import copy
+from typing import Any
 from .algo import Dijkstra
 
 
@@ -21,12 +22,17 @@ class DroneSimulator():
         stations_data (dict)  : données brutes des stations issues du parsing
     """
 
-    def __init__(self, nb_drones, stations_data, neighbor_station, connections_data) -> None:
+    def __init__(
+        self,
+        nb_drones: int,
+        stations_data: dict[str, Any],
+        neighbor_station: dict[str, Any],
+        connections_data: dict[tuple[str, str], Any]
+    ) -> None:
         self.nb_drones = nb_drones
-        self.current_drones = {}
+        self.current_drones: dict[str, dict[str, float]] = {}
         self.stations_data = stations_data
         self.connections_data = connections_data
-
 
         # Construction du dict de capacités : max depuis les métadonnées,
         # inf si pas de max_drones défini dans la map
@@ -43,14 +49,13 @@ class DroneSimulator():
 
         self.dijkstra = Dijkstra(stations_data, neighbor_station, connections_data)
 
-
-    def run(self):
+    def run(self) -> None:
         """Lance la simulation tour par tour jusqu'à ce que tous les drones atteignent goal."""
         nb_tr = 0
         # position courante de chaque drone (D1 = drone1, etc.)
-        self.drones_positions = {f'D{i+1}': 'start' for i in range(self.nb_drones)}
-        
-        self.history_drones = {}
+        self.drones_positions: dict[str, str] = {f'D{i+1}': 'start' for i in range(self.nb_drones)}
+
+        self.history_drones: dict[int, dict[str, str]] = {}
 
         # Boucle principale : on tourne tant que tous les drones ne sont pas à goal
         while self.current_drones['goal']['current'] != self.nb_drones:
@@ -59,23 +64,22 @@ class DroneSimulator():
             # On lit toujours depuis le snapshot (état figé) et on écrit dans
             # current_drones, donc un drone arrivé ce tour ne repart pas ce même tour.
             snapshot = copy.deepcopy(self.current_drones)
-            turn_moves = []
-
+            turn_moves: list[str] = []
 
             for station in snapshot:
-                if not station in self.dijkstra.graph:
+                if station not in self.dijkstra.graph:
                     continue
-                    
+
                 # Calcul du chemin optimal depuis cette station jusqu'à goal
                 paths = self.dijkstra.find_path(station, 'goal')
 
                 # Si la station est déjà goal (chemin d'un seul élément), rien à faire
                 if len(paths) >= 2:
                     next_st = paths[1]
-                
-                    link = (self.connections_data.get((station, next_st)) 
+
+                    link = (self.connections_data.get((station, next_st))
                             or self.connections_data.get((next_st, station)))
-                  
+
                     max_link = (link.get('max_link_capacity') if link else None) or 1
 
                     # Place disponible dans la prochaine station
@@ -85,10 +89,8 @@ class DroneSimulator():
                     # et la place dans la station suivante
                     min_drones = min(snapshot[station]['current'], place, max_link)
 
-
                     # On déplace seulement si la station suivante a de la place
                     # et que la station courante a des drones à envoyer
-                    
                     if min_drones > 0:
                         self.current_drones[next_st]['current'] += min_drones
                         self.current_drones[station]['current'] -= min_drones
@@ -98,8 +100,8 @@ class DroneSimulator():
                         # puis garde seulement les min_drones premiers (ceux qui bougent ce tour).
                         # Pour chacun : on met à jour sa position et on note le mouvement
                         # au format 'D1-next_station' dans turn_moves pour l'affichage.
-                        moved = [d for d, pos in self.drones_positions.items() if pos == station][:min_drones]
-                        
+                        moved = [d for d, pos in self.drones_positions.items() if pos == station][:int(min_drones)]
+
                         for d in moved:
                             self.drones_positions[d] = next_st
                             turn_moves.append(f'{d}-{next_st}')
@@ -109,5 +111,3 @@ class DroneSimulator():
 
             nb_tr += 1
         print(f"\nTotal number tour: {nb_tr}")
-
-

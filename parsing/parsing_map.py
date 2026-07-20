@@ -113,8 +113,6 @@ class ConfigParsing():
             else:
                 config_dict[key] = [(i, value)]
 
-        
-
         if count_drone != 1:
             raise ValueError(f"Line {i} (end of file): 'nb_drones' is missing")
         if count_start != 1:
@@ -128,7 +126,7 @@ class ConfigParsing():
                 "nb_drones", [(None, None)])[0]
             ConfigDrone(nb_drones=drone_count)
             self.drones = int(drone_count)
-            
+
         except ValidationError:
             line_num, _ = config_dict.get("nb_drones", [(None, None)])[0]
             raise ValueError(f"Line {line_num}: 'nb_drones' must be a number "
@@ -155,7 +153,7 @@ class ConfigParsing():
         Connection.parse_connection(
             value_connection, self.station_names,
             self.connections_data, self.neighbor_station)
-        
+
         end_name = self.station_names[end_hub_id]
         if end_name != 'goal':
             self.stations_data['goal'] = self.stations_data.pop(end_name)
@@ -170,6 +168,7 @@ class ConfigParsing():
                 (('goal' if a == end_name else a), ('goal' if b == end_name else b)): v
                 for (a, b), v in self.connections_data.items()
             }
+
 
 class ConfigMap():
     """
@@ -313,9 +312,9 @@ class Station(ABC):
                 elif station_metadata['color'] not in color_list:
                     station_metadata['color'] = 'cyan'
 
-            else: 
+            else:
                 station_metadata['color'] = 'cyan'
-            
+
             # gestion erreur pour les valeurs de 'zone=....'
             if 'zone' in station_metadata:
                 if not station_metadata['zone']:
@@ -331,10 +330,9 @@ class Station(ABC):
             if 'max_drones' in station_metadata:
                 if (
                     not station_metadata['max_drones']
-                or int(station_metadata['max_drones']) < 1
+                    or int(station_metadata['max_drones']) < 1
                 ):
                     station_metadata['max_drones'] = 1
-
 
             # pour l'algo avec comme cle le nom  de la station
             # et ensuite un dictionnaire des clees :
@@ -409,7 +407,6 @@ class Connection():
             if item is None:
                 continue
             link_connection = {}
-            
 
             if "[" in item:
                 part = item.split("[")
@@ -425,7 +422,6 @@ class Connection():
                 connection_pair = [s.strip() for s in item.split("-")]
                 key, value = "max_link_capacity", 1
                 link_connection[key] = int(value)
-            
 
             # gestion nbre de station min 2
             if len(connection_pair) != 2:

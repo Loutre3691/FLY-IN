@@ -1,12 +1,14 @@
 from models.zone import Normal, Blocked, Restricted, Priority
 import heapq
+from typing import Any
 
-ZONE_MAP = {
+ZONE_MAP: dict[str, Any] = {
     'normal': Normal,
     'blocked': Blocked,
     'restricted': Restricted,
     'priority': Priority,
 }
+
 
 class Dijkstra():
     """
@@ -31,11 +33,16 @@ class Dijkstra():
         graph (dict) : le graphe complet station -> voisins + coût
     """
 
-    def __init__(self, stations_data, neighbor_station, connections_data):
+    def __init__(
+        self,
+        stations_data: dict[str, Any],
+        neighbor_station: dict[str, Any],
+        connections_data: dict[tuple[str, str], Any]
+    ) -> None:
         self.stations_data = stations_data
         self.neighbor_station = neighbor_station
         self.connections_data = connections_data
-        self.graph = {}
+        self.graph: dict[str, dict[str, Any]] = {}
 
         # Construction du graphe : pour chaque station on calcule
         # son coût via sa zone et on récupère ses voisins
@@ -53,9 +60,7 @@ class Dijkstra():
 
         self.find_path('start', 'goal')
 
-
-
-    def find_path(self, start, goal) -> list:
+    def find_path(self, start: str, goal: str) -> list[str]:
         """
         Trouve le chemin le moins coûteux de 'start' à 'goal'.
 
@@ -102,24 +107,24 @@ class Dijkstra():
                        ↓ inversé
                 start → loop_a → loop_b → exit_point → goal
         """
-        priority_queue = []
+        priority_queue: list[tuple[float, str]] = []
         heapq.heappush(priority_queue, (0, start))
-        visited = set()
-        distances = {station: float('inf') for station in self.graph}
+        visited: set[str] = set()
+        distances: dict[str, float] = {station: float('inf') for station in self.graph}
         distances[start] = 0
-        previous = {}
+        previous: dict[str, str] = {}
 
         while priority_queue:
             current_cost, current_station = heapq.heappop(priority_queue)
-            
+
             if current_station in visited:
                 continue
 
             visited.add(current_station)
 
             for neighbor in self.graph[current_station]['neighbors']:
-                if not neighbor in self.graph:
-                    continue 
+                if neighbor not in self.graph:
+                    continue
                 new_cost = self.graph[neighbor]['cost'] + current_cost
 
                 if new_cost < distances[neighbor]:
@@ -127,9 +132,8 @@ class Dijkstra():
                     previous[neighbor] = current_station
                     heapq.heappush(priority_queue, (new_cost, neighbor))
 
-
         # Reconstruction du chemin depuis goal → start, puis on inverse
-        path = []
+        path: list[str] = []
         if distances[goal] == float('inf'):
             print("\033[1;31m\n 🛰  Houston, we have a problem: drones are lost "
                   "in the void, goal station is unreachable! 🛰 \n\033[0m")
@@ -141,21 +145,3 @@ class Dijkstra():
 
         path = [start] + path[::-1]
         return (path)
-            
-
-  
-                
-    
-
-                
-
-
-
-
-
-
-  
-            
-
-
-

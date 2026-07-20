@@ -4,18 +4,17 @@ from display_folder import display
 import sys
 
 
-def main() -> dict:
+def main() -> ConfigParsing:
     """
-    Script execution guard.
+    Garde d'exécution du script.
 
-    Ensures that the program only runs if the required configuration
-    file exists.
+    Vérifie que le programme ne s'exécute que si le fichier de
+    configuration requis existe.
     """
     try:
         with open(sys.argv[1], "r") as file:
             config = ConfigParsing(file)
             return config
-
 
     except PermissionError:
         print("\033[0;31mError: permission not valid\033\n[0m")
@@ -37,13 +36,9 @@ if __name__ == "__main__":
         print("Usage: python script.py fichier.txt")
         sys.exit()
     else:
-    
         config = main()
-        sim = DroneSimulator(config.drones, config.stations_data, config.neighbor_station, config.connections_data)
+        sim = DroneSimulator(
+            config.drones, config.stations_data,
+            config.neighbor_station, config.connections_data)
         sim.run()
-        display.Display(config.stations_data, sim.history_drones)
-
-
-
-        
-        
+        display.Display(config.stations_data, sim.history_drones, config.connections_data)
