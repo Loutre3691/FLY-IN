@@ -115,7 +115,7 @@ class Display():
         self.marge: float = 100
         self.coef: float = 1
         self.station_pixels: dict[str, tuple[float, float]] = {}
-
+    
         if len(stations_data) > 70:
             print(
                 "\033[0;31mError: too many stations (max 70) to "
@@ -246,6 +246,31 @@ class Display():
             return (COLOR_MAP[color])
         return None
 
+    def draw_station_label(
+        self, police: pygame.font.Font, station: str,
+        x: float, y: float
+    ) -> None:
+        """
+        Dessine le nom de la station dans un encart noir, place en
+        (x, y) (coin haut-gauche de l'encart).
+
+        Si le nom fait plus de 8 caracteres et contient un
+        underscore, il est coupe en deux lignes a cet endroit pour
+        rester lisible sur les grandes cartes.
+        """
+        if len(station) > 8 and '_' in station:
+            lines = station.split('_', 1)
+        else:
+            lines = [station]
+
+        surfaces = [
+            police.render(line, True, (255, 255, 255)) for line in lines]
+  
+        line_y = y + 3
+        for surf in surfaces:
+            self.windows.blit(surf, (x + 3, line_y))
+            line_y += surf.get_height()
+
     def draw_stations(self) -> None:
         """
         Calcule et dessine la position de chaque station sur la
@@ -265,7 +290,11 @@ class Display():
         calculer le trajet de chaque drone d'une station a l'autre.
         """
         # permet d enlever aussi la marge de chaque cote pour x et y
-        # et de multiplier par le facteur scale (l'echelle)
+        # et de multiplier par le facteur scale (l'echell)
+
+        size = 30  if self.choice == 'big' else (
+            10 if self.choice == 'little' else 20)
+        police = pygame.font.SysFont("manjari", size)
 
         for station, data in self.stations_data.items():
             pixel_x = (
@@ -295,6 +324,8 @@ class Display():
                     center,
                     Calculate.size_cercle(self, ICONS['start']['radius']))
                 self.windows.blit(self.start_png, (pixel_x, pixel_y + 5))
+                self.draw_station_label(
+                    police, station, pixel_x + 20, pixel_y - 40)
                 self.station_pixels['start'] = center
             elif station == 'goal':
                 icon_scale = Calculate.size_icon(self, 'goal')
@@ -308,6 +339,8 @@ class Display():
                     Calculate.size_cercle(self, ICONS['goal']['radius']))
                 self.windows.blit(
                     self.end_png, (pixel_x - 100 * self.ratio, pixel_y))
+                self.draw_station_label(
+                    police, station, pixel_x - 60, pixel_y - 40)
                 self.station_pixels['goal'] = center
             else:
                 if data['zone'] == 'normal':
@@ -371,7 +404,9 @@ class Display():
                             self, ICONS['priority']['radius']))
                     self.windows.blit(
                         self.zone_png['priority'], (pixel_x, pixel_y))
-                    
+
+                self.draw_station_label(
+                    police, station, pixel_x - 10, pixel_y - 45)
                 self.station_pixels[station] = center
 
     def draw_drones(
@@ -391,9 +426,9 @@ class Display():
         """
         size = 40  if self.choice == 'big' else (
             20 if self.choice == 'little' else 30)
+        police = pygame.font.SysFont("z003", size)
         add = 30 if self.choice == 'big' else (
             15 if self.choice == 'little' else 20)
-        self.police = pygame.font.SysFont("z003", size)
 
         for drone, station_goal in self.drones_positions[tour].items():
             station_start = previous[drone]
@@ -403,7 +438,7 @@ class Display():
             x = start_x + (goal_x - start_x) * progression
             y = start_y + (goal_y - start_y) * progression
 
-            text = self.police.render(drone, True, (255, 255, 255))
+            text = police.render(drone, True, (255, 255, 255))
             drone_w, drone_h = self.drone_png.get_size()
             self.windows.blit(
                 self.drone_png, (x - drone_w // 2, y - drone_h // 2))
