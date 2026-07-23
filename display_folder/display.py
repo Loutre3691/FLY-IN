@@ -432,16 +432,16 @@ class Display():
         Le nom du drone est ecrit par-dessus son icone avec la police
         choisie ici selon la taille de fenetre.
         """
-        size = 40  if self.choice == 'big' else (
-            20 if self.choice == 'little' else 30)
-        police = pygame.font.SysFont("z003", size)
-        add = 30 if self.choice == 'big' else (
+        size = 30  if self.choice == 'big' else (
             15 if self.choice == 'little' else 20)
+        police = pygame.font.SysFont("puriza", size)
+        add = 55 if self.choice == 'big' else (
+            25 if self.choice == 'little' else 35)
 
-        for drone, station_goal in self.drones_positions[tour].items():
-            station_start = previous[drone]
-            start_x, start_y = self.station_pixels[station_start]
-            goal_x, goal_y = self.station_pixels[station_goal]
+        for drone, station_next in self.drones_positions[tour].items():
+            station_from = previous[drone]
+            start_x, start_y = self.station_pixels[station_from]
+            goal_x, goal_y = self.station_pixels[station_next]
 
             x = start_x + (goal_x - start_x) * progression
             y = start_y + (goal_y - start_y) * progression
@@ -450,7 +450,8 @@ class Display():
             drone_w, drone_h = self.drone_png.get_size()
             self.windows.blit(
                 self.drone_png, (x - drone_w // 2, y - drone_h // 2))
-            self.windows.blit(text, (x + add, y - add))
+            if station_next != 'start' and station_next != 'goal':
+                self.windows.blit(text, (x, y - add))
 
     def run_display(self) -> None:
         """
@@ -483,6 +484,7 @@ class Display():
         while True:
             self.paused = False
             self.restart = False
+            self.exit = False
             tour_index = 0
             previous = {
                 drone: 'start' for drone in self.drones_positions[0]}
@@ -512,14 +514,17 @@ class Display():
                     if self.restart:
                         break
 
+                    if self.exit:
+                        exit(1)
+
                 if self.restart:
                     break
+                
+                if self.exit:
+                    exit(1)
 
                 previous = self.drones_positions[tour]
                 tour_index += 1
-
-            if self.restart:
-                continue
 
             waiting = True
             while waiting:
@@ -560,11 +565,15 @@ class Display():
                 self.speed_index = 0
             else:
                 self.speed_index += 1
+
         if event_key == pygame.K_s:
             self.paused = not self.paused
 
         if event_key == pygame.K_b:
             self.restart = True
+
+        if event_key == pygame.K_q:
+            self.exit = True
 
 
 
