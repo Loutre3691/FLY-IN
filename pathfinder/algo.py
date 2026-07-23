@@ -23,7 +23,7 @@ class Dijkstra():
 
     Le graphe construit ressemble à ça :
         {
-            'start':      {'neighbors': ['loop_a'],          'cost': 1},
+            'start':      {'neighbors': ['loop_a'], 'cost': 1},
             'loop_a':     {'neighbors': ['start', 'loop_b', 'loop_d'], 'cost': 1},
             'exit_point': {'neighbors': ['loop_b', 'goal'],  'cost': 2},
             ...

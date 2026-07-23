@@ -251,7 +251,7 @@ class Display():
         x: float, y: float
     ) -> None:
         """
-        Dessine le nom de la station dans un encart noir, place en
+        Dessine le nom de la station, place en
         (x, y) (coin haut-gauche de l'encart).
 
         Si le nom fait plus de 8 caracteres et contient un
@@ -292,8 +292,16 @@ class Display():
         # permet d enlever aussi la marge de chaque cote pour x et y
         # et de multiplier par le facteur scale (l'echell)
 
-        size = 30  if self.choice == 'big' else (
-            10 if self.choice == 'little' else 20)
+        size = 20  if self.choice == 'big' else (
+            8 if self.choice == 'little' else 15)
+        add_ft = 60 if self.choice == 'big' else (
+            30 if self.choice == 'little' else 40)
+        add_start_y = 60 if self.choice == 'big' else (
+            20 if self.choice == 'little' else 40)
+        add_start_x = 60 if self.choice == 'big' else (
+            10 if self.choice == 'little' else 30)
+        add_end = 50 if self.choice == 'big' else (
+            30 if self.choice == 'little' else 30)
         police = pygame.font.SysFont("manjari", size)
 
         for station, data in self.stations_data.items():
@@ -325,7 +333,7 @@ class Display():
                     Calculate.size_cercle(self, ICONS['start']['radius']))
                 self.windows.blit(self.start_png, (pixel_x, pixel_y + 5))
                 self.draw_station_label(
-                    police, station, pixel_x + 20, pixel_y - 40)
+                    police, station, pixel_x + add_start_x, pixel_y - add_start_y)
                 self.station_pixels['start'] = center
             elif station == 'goal':
                 icon_scale = Calculate.size_icon(self, 'goal')
@@ -340,7 +348,7 @@ class Display():
                 self.windows.blit(
                     self.end_png, (pixel_x - 100 * self.ratio, pixel_y))
                 self.draw_station_label(
-                    police, station, pixel_x - 60, pixel_y - 40)
+                    police, station, pixel_x - 40, pixel_y - add_end)
                 self.station_pixels['goal'] = center
             else:
                 if data['zone'] == 'normal':
@@ -406,7 +414,7 @@ class Display():
                         self.zone_png['priority'], (pixel_x, pixel_y))
 
                 self.draw_station_label(
-                    police, station, pixel_x - 10, pixel_y - 45)
+                    police, station, pixel_x, pixel_y - add_ft)
                 self.station_pixels[station] = center
 
     def draw_drones(
@@ -493,6 +501,7 @@ class Display():
                                 self.choice_keydown(event.key)
 
                     self.draw_background()
+                    self.draw_keyword_utils()
                     self.draw_stations()
                     self.draw_connections()
                     self.draw_stations()
@@ -528,6 +537,14 @@ class Display():
     def draw_background(self) -> None:
         """Efface la map en reaffichant l'image de fond par-dessus."""
         self.windows.blit(self.background, (0, 0))
+
+    def draw_keyword_utils(self) -> None:
+        police = pygame.font.SysFont("z003", 20)
+        texte = "PRESS\n- SPACE = speed run drone\n- S = stop run\n- B = restart map\n"
+        text = police.render(texte, True, (255, 255, 255))
+        self.windows.blit(text, (0, 10))
+        
+
 
     def draw_connections(self) -> None:
         """Affichage du trace entre deux station grace a self.connections_data"""

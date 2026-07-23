@@ -36,9 +36,13 @@ if __name__ == "__main__":
         print("Usage: python script.py fichier.txt")
         sys.exit()
     else:
-        config = main()
-        sim = DroneSimulator(
-            config.drones, config.stations_data,
-            config.neighbor_station, config.connections_data)
-        sim.run()
-        display.Display(config.stations_data, sim.history_drones, config.connections_data)
+        try:
+            config = main()
+            sim = DroneSimulator(
+                config.drones, config.stations_data,
+                config.neighbor_station, config.connections_data)
+            sim.run()
+            display.Display(config.stations_data, sim.history_drones, config.connections_data)
+        except KeyboardInterrupt:
+            print(f"\033[0;31mError: Programm stopped by user\033[0m\n")
+            exit(1)
