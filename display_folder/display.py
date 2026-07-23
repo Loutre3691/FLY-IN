@@ -44,6 +44,16 @@ USER_CHOICE_SIZE: dict[str, tuple[int, int]] = {
         }
 
 
+class _RestartAnimation(Exception):
+    """Signale un redemarrage de l'animation (touche B), pour sortir
+    d'un coup des boucles imbriquees de run_display."""
+
+
+class _QuitAnimation(Exception):
+    """Signale une sortie du programme (touche Q), pour sortir d'un
+    coup des boucles imbriquees de run_display."""
+
+
 class Display():
     """
     Gere l'affichage pygame de la simulation : dessine la carte, les
@@ -483,71 +493,90 @@ class Display():
 
         while True:
             self.paused = False
-            self.restart = False
-            self.exit = False
-            tour_index = 0
             previous = {
                 drone: 'start' for drone in self.drones_positions[0]}
 
-            while tour_index < len(tours):
-                tour = tours[tour_index]
+            try:
+                for tour in tours:
+                    for progression in progression_steps:
+                        self._handle_events()
+                        while self.paused:
+                            self._handle_events()
 
-                for progression in progression_steps:
-                    for event in pygame.event.get():
-                        if event.type == pygame.KEYDOWN:
-                            self.choice_keydown(event.key)
+                        self.draw_background()
+                        self.draw_keyword_utils()
+                        self.draw_stations()
+                        self.draw_connections()
+                        self.draw_stations()  # redessine par-dessus les traits
+                        self.draw_drones(tour, previous, progression)
+                        pygame.time.wait(self.speed[self.speed_index])
+                        pygame.display.flip()
 
-                    while self.paused:
-                        for event in pygame.event.get():
-                            if event.type == pygame.KEYDOWN:
-                                self.choice_keydown(event.key)
+                    previous = self.drones_positions[tour]
 
-                    self.draw_background()
-                    self.draw_keyword_utils()
-                    self.draw_stations()
-                    self.draw_connections()
-                    self.draw_stations()
-                    self.draw_drones(tour, previous, progression)
-                    pygame.time.wait(self.speed[self.speed_index])
-                    pygame.display.flip()
+                self._wait_for_restart()
+            except _RestartAnimation:
+                continue
+            except _QuitAnimation:
+                pygame.quit()
+                sys.exit()
 
-                    if self.restart:
-                        break
+    def _handle_events(self) -> None:
+        """Recupere les evenements pygame en attente et les traite :
+        ferme la fenetre sur QUIT, sinon delegue les touches pressees
+        a choice_keydown (qui peut lever _RestartAnimation ou
+        _QuitAnimation pour interrompre l'animation en cours)."""
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                raise _QuitAnimation
+            if event.type == pygame.KEYDOWN:
+                self.choice_keydown(event.key)
 
-                    if self.exit:
-                        exit(1)
 
-                if self.restart:
-                    break
-                
-                if self.exit:
-                    exit(1)
-
-                previous = self.drones_positions[tour]
-                tour_index += 1
-
-            waiting = True
-            while waiting:
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        pygame.quit()
-                        sys.exit()
-                    if event.type == pygame.KEYDOWN:
-                        self.choice_keydown(event.key)
-                        if self.restart:
-                            waiting = False
-
+    def _wait_for_restart(self) -> None:
+        """Une fois tous les tours joues, garde la fenetre ouverte et
+        attend que l'utilisateur appuie sur B (redemarrer) ou ferme
+        la fenetre / appuie sur Q (quitter)."""
+        while True:
+            self._handle_events()
 
 
     def draw_background(self) -> None:
         """Efface la map en reaffichant l'image de fond par-dessus."""
         self.windows.blit(self.background, (0, 0))
 
+
+
     def draw_keyword_utils(self) -> None:
-        police = pygame.font.SysFont("z003", 20)
-        texte = "PRESS\n- SPACE = speed run drone\n- S = stop run\n- B = restart map\n"
-        text = police.render(texte, True, (255, 255, 255))
-        self.windows.blit(text, (0, 10))
+        police = pygame.font.SysFont("manjari", 20)
+        lignes = [
+            "        PRESS keyboard",
+            "",
+            "- SPACE = speed run drone",
+            "- S = stop run",
+            "- B = restart map",
+            "- Q = exit"
+        ]
+        padding = 15
+        largeur = max(police.size(ligne)[0] for ligne in lignes) + padding * 2
+        hauteur = len(lignes) * police.get_linesize() + padding * 2
+
+        # coin bas-droit de la fenetre : zone rarement occupee par
+        # une station, quelle que soit la carte chargee
+        window_w, window_h = self.windows.get_size()
+        x = window_w - largeur
+        y = window_h - hauteur
+
+        # fond semi-transparent : garde le texte lisible sans cacher
+        # totalement ce qu'il y a sur la carte en dessous
+        fond = pygame.Surface((largeur, hauteur), pygame.SRCALPHA)
+        fond.fill((0, 0, 0, 130))
+        self.windows.blit(fond, (x, y))
+
+        for i, ligne in enumerate(lignes):
+            text = police.render(ligne, True, (255, 255, 255))
+            self.windows.blit(
+                text, (x + padding, y + padding + i * police.get_linesize()))
         
 
 
@@ -570,10 +599,10 @@ class Display():
             self.paused = not self.paused
 
         if event_key == pygame.K_b:
-            self.restart = True
+            raise _RestartAnimation
 
         if event_key == pygame.K_q:
-            self.exit = True
+            raise _QuitAnimation
 
 
 
