@@ -6,6 +6,7 @@ from typing import Any, cast  # noqa: E402
 pygame.font.init()
 
 
+
 COLOR_MAP: dict[str, tuple[int, int, int]] = {
     'green':   (34, 139, 34),
     'blue':    (30, 144, 255),
@@ -265,7 +266,7 @@ class Display():
         (x, y) (coin haut-gauche de l'encart).
 
         Si le nom fait plus de 8 caracteres et contient un
-        underscore, il est coupe en deux lignes a cet endroit pour
+        underscore, il est coupe en deux lines a cet endroit pour
         rester lisible sur les grandes cartes.
         """
         if len(station) > 8 and '_' in station:
@@ -515,8 +516,10 @@ class Display():
                     previous = self.drones_positions[tour]
 
                 self._wait_for_restart()
+
             except _RestartAnimation:
                 continue
+
             except _QuitAnimation:
                 pygame.quit()
                 sys.exit()
@@ -549,7 +552,7 @@ class Display():
 
     def draw_keyword_utils(self) -> None:
         police = pygame.font.SysFont("manjari", 20)
-        lignes = [
+        lines = [
             "        PRESS keyboard",
             "",
             "- SPACE = speed run drone",
@@ -558,23 +561,23 @@ class Display():
             "- Q = exit"
         ]
         padding = 15
-        largeur = max(police.size(ligne)[0] for ligne in lignes) + padding * 2
-        hauteur = len(lignes) * police.get_linesize() + padding * 2
+        weight = max(police.size(ligne)[0] for ligne in lines) + padding * 2
+        height = len(lines) * police.get_linesize() + padding * 2
 
         # coin bas-droit de la fenetre : zone rarement occupee par
         # une station, quelle que soit la carte chargee
         window_w, window_h = self.windows.get_size()
-        x = window_w - largeur
-        y = window_h - hauteur
+        x = window_w - weight
+        y = window_h - height
 
         # fond semi-transparent : garde le texte lisible sans cacher
         # totalement ce qu'il y a sur la carte en dessous
-        fond = pygame.Surface((largeur, hauteur), pygame.SRCALPHA)
+        fond = pygame.Surface((weight, height), pygame.SRCALPHA)
         fond.fill((0, 0, 0, 130))
         self.windows.blit(fond, (x, y))
 
-        for i, ligne in enumerate(lignes):
-            text = police.render(ligne, True, (255, 255, 255))
+        for i, line in enumerate(lines):
+            text = police.render(line, True, (255, 255, 255))
             self.windows.blit(
                 text, (x + padding, y + padding + i * police.get_linesize()))
         

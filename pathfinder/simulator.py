@@ -40,7 +40,7 @@ class DroneSimulator():
             if stations_data[station].get('max_drones'):
                 self.current_drones[station] = {"max": int(stations_data[station]['max_drones']), "current": 0}
             else:
-                self.current_drones[station] = {"max": float('inf'), "current": 0}
+                self.current_drones[station] = {"max": 1, "current": 0}
 
         # Tous les drones partent de start (max de start ignoré selon le sujet)
         self.current_drones['start']['current'] = nb_drones
